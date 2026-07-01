@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Source+Sans+3:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --accent: #2a6fdb; --ink: #16202e; --muted: #5b6675; }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: #ffffff; color: var(--ink); font-family: "Source Sans 3", system-ui, sans-serif; -webkit-font-smoothing: antialiased; line-height: 1.65; }
+  a { color: var(--accent, #2a6fdb); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  ::selection { background: rgba(42,111,219,0.16); }
+</style>
+</helmet>
+
+<div style="max-width: 1080px; margin: 0 auto; padding: 0 24px;">
+
+  <!-- ===== HERO ===== -->
+  <header style="padding: 72px 0 26px; text-align: center;">
+    <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border: 1px solid rgba(42,111,219,0.28); border-radius: 999px; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent, #2a6fdb); font-weight: 600; margin-bottom: 26px;">
+      <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--accent, #2a6fdb); display: inline-block;"></span>
+      ECCV 2026
+    </div>
+    <h1 style="font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 46px; line-height: 1.14; letter-spacing: -0.01em; margin: 0 auto 6px; max-width: 940px; text-wrap: balance;">
+      O-VAD: Industrial Video Anomaly Detection through Object-Centric Tracking and Reasoning
+    </h1>
+
+    <!-- authors -->
+    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; margin: 28px auto 14px; max-width: 820px; font-size: 19px;">
+      <span>Mei Yuan<sup style="color: var(--accent, #2a6fdb); font-weight: 600;">1</sup></span>
+      <span>Qi Long<sup style="color: var(--accent, #2a6fdb); font-weight: 600;">1</sup></span>
+      <span>Qifeng Wu<sup style="color: var(--accent, #2a6fdb); font-weight: 600;">1</sup></span>
+      <span>Zhenyang Li<sup style="color: var(--accent, #2a6fdb); font-weight: 600;">2</sup></span>
+      <span>Yizhou Zhao<sup style="color: var(--accent, #2a6fdb); font-weight: 600;">1</sup></span>
+      <span>Lei Wang<sup style="color: var(--accent, #2a6fdb); font-weight: 600;">3</sup></span>
+      <span>Yang Liu<sup style="color: var(--accent, #2a6fdb); font-weight: 600;">1</sup></span>
+      <span>Min Xu<sup style="color: var(--accent, #2a6fdb); font-weight: 600;">1</sup> <span title="Corresponding author" style="color: var(--muted);">&#9993;</span></span>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 26px; color: var(--muted); font-size: 16px;">
+      <span><sup style="color: var(--accent, #2a6fdb); font-weight: 600;">1</sup>&nbsp;Carnegie Mellon University</span>
+      <span><sup style="color: var(--accent, #2a6fdb); font-weight: 600;">2</sup>&nbsp;University of Alabama at Birmingham</span>
+      <span><sup style="color: var(--accent, #2a6fdb); font-weight: 600;">3</sup>&nbsp;Griffith University</span>
+    </div>
+    <div style="margin-top: 12px; font-family: 'JetBrains Mono', monospace; font-size: 13.5px; color: var(--muted);">
+      meiyuan@andrew.cmu.edu &nbsp;&middot;&nbsp; mxu1@cs.cmu.edu
+    </div>
+
+    <!-- buttons -->
+    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 32px;">
+      <a href="{{ githubUrl }}" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 9px; background: var(--ink); color: #fff; padding: 11px 22px; border-radius: 999px; font-weight: 600; font-size: 15px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+        Code
+      </a>
+      <a href="#video" style="display: inline-flex; align-items: center; gap: 9px; background: #fff; color: var(--ink); padding: 11px 22px; border-radius: 999px; font-weight: 600; font-size: 15px; border: 1px solid rgba(22,32,46,0.16);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        Demo Video
+      </a>
+      <a href="#bibtex" style="display: inline-flex; align-items: center; gap: 9px; background: #fff; color: var(--ink); padding: 11px 22px; border-radius: 999px; font-weight: 600; font-size: 15px; border: 1px solid rgba(22,32,46,0.16);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        BibTeX
+      </a>
+    </div>
+  </header>
+
+  <!-- ===== TEASER ===== -->
+  <figure style="margin: 28px 0 8px;">
+    <img src="static/images/teaser.png" alt="O-VAD teaser" style="width: 100%; height: auto; display: block; border: 1px solid rgba(22,32,46,0.10); border-radius: 6px;">
+    <figcaption style="margin-top: 14px; color: var(--muted); font-size: 15px; line-height: 1.55;">
+      <b style="color: var(--ink);">Why object state evolution matters.</b> A toothpaste tube undergoes pressing and deformation before a subtle leakage emerges. Traditional methods give a binary score; VLM prompting misses it for lack of localized evidence. <span style="color: var(--accent, #2a6fdb); font-weight: 600;">O-VAD</span> tracks object-wise state changes and produces an open-ended anomaly report with in-depth analysis.
+    </figcaption>
+  </figure>
+
+  <!-- ===== ABSTRACT ===== -->
+  <section style="padding: 52px 0 8px;">
+    <h2 style="font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent, #2a6fdb); text-align: center; margin: 0 0 18px;">Abstract</h2>
+    <p style="max-width: 820px; margin: 0 auto; font-size: 18px; line-height: 1.75; color: #2b3543; text-wrap: pretty;">
+      Industrial Video Anomaly Detection (IVAD) is crucial for modern manufacturing and quality control, yet existing VLM-based anomaly-reasoning methods decline in industrial settings characterized by intricate object transformations, strict physics, and procedural constraints. We introduce <b>O-VAD</b>, a <b>training-free agentic framework</b> that detects anomalies free of any domain-specific knowledge, labels, or predefined taxonomy &mdash; emphasizing object state evolution like human inspectors. Rather than injecting external knowledge or relying on complex prompt design, O-VAD lets the VLM build its own understanding through a <b>&ldquo;ground &rarr; track &rarr; reason&rdquo;</b> pipeline: it tracks the spatiotemporal dynamics and underlying transformations of detected objects over time, then reasons over per-object temporal state trajectories to identify abnormal objects in grounded frames. Extensive experiments on <b>three</b> IVAD datasets show that O-VAD outperforms frontier VLMs, agentic frameworks, and traditional VAD methods fine-tuned on the respective datasets, while providing interpretable reports over anomaly processes and types.
+    </p>
+  </section>
+
+  <!-- ===== HIGHLIGHT STATS ===== -->
+  <section style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 44px 0 8px;">
+    <div style="border: 1px solid rgba(22,32,46,0.10); border-radius: 8px; padding: 22px 16px; text-align: center;">
+      <div style="font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 30px; color: var(--accent, #2a6fdb); line-height: 1;">3</div>
+      <div style="margin-top: 8px; font-size: 13.5px; color: var(--muted);">IVAD benchmarks evaluated</div>
+    </div>
+    <div style="border: 1px solid rgba(22,32,46,0.10); border-radius: 8px; padding: 22px 16px; text-align: center;">
+      <div style="font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 30px; color: var(--accent, #2a6fdb); line-height: 1;">0</div>
+      <div style="margin-top: 8px; font-size: 13.5px; color: var(--muted);">training samples or annotations</div>
+    </div>
+    <div style="border: 1px solid rgba(22,32,46,0.10); border-radius: 8px; padding: 22px 16px; text-align: center;">
+      <div style="font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 30px; color: var(--accent, #2a6fdb); line-height: 1;">0.584</div>
+      <div style="margin-top: 8px; font-size: 13.5px; color: var(--muted);">Phys-AD AUROC &mdash; beats trained VADs</div>
+    </div>
+    <div style="border: 1px solid rgba(22,32,46,0.10); border-radius: 8px; padding: 22px 16px; text-align: center;">
+      <div style="font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 30px; color: var(--accent, #2a6fdb); line-height: 1;">0.929</div>
+      <div style="margin-top: 8px; font-size: 13.5px; color: var(--muted);">LiquidAD video-level F1</div>
+    </div>
+  </section>
+
+  <!-- ===== METHOD ===== -->
+  <section style="padding: 56px 0 8px;">
+    <h2 style="font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent, #2a6fdb); text-align: center; margin: 0 0 8px;">Method</h2>
+    <p style="text-align: center; max-width: 740px; margin: 0 auto 30px; color: var(--muted); font-size: 17px;">
+      A training-free <b style="color: var(--ink);">&ldquo;ground &rarr; track &rarr; reason&rdquo;</b> agentic pipeline that shifts the unit of analysis from holistic frames to individual objects.
+    </p>
+    <figure style="margin: 0 0 36px;">
+      <img src="static/images/pipeline.png" alt="O-VAD pipeline" style="width: 100%; height: auto; display: block; border: 1px solid rgba(22,32,46,0.10); border-radius: 6px;">
+      <figcaption style="margin-top: 14px; color: var(--muted); font-size: 15px; line-height: 1.55;">
+        <b style="color: var(--ink);">Overview of O-VAD.</b> Stage&nbsp;1 samples multiple frames and queries a VLM (GPT-5) to discover all objects, then segments them with SAM&nbsp;3 to produce initial masks and metadata. Stage&nbsp;2 builds spatiotemporal tubelets via CropFormer + SAM&nbsp;2, recovers missing tracks through semantic and proximity priors, and queries the VLM for open-ended state-change and inter-object interaction analysis. Stage&nbsp;3 feeds accumulated metadata and state-change events into a cascaded chain-of-thought that separates process actions from failure outcomes, followed by visual verification.
+      </figcaption>
+    </figure>
+
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px;">
+      <div style="border: 1px solid rgba(22,32,46,0.10); border-radius: 10px; padding: 26px 22px;">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--accent, #2a6fdb); font-weight: 500;">STAGE 01</div>
+        <h3 style="font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 21px; margin: 8px 0 10px;">Automated Object Grounding</h3>
+        <p style="margin: 0; color: var(--muted); font-size: 15.5px; line-height: 1.6;">Samples candidate frames spanning the video and prompts a VLM to discover every task-relevant object, then segments each with SAM&nbsp;3 to produce initial masks and structured metadata &mdash; no manual annotation.</p>
+      </div>
+      <div style="border: 1px solid rgba(22,32,46,0.10); border-radius: 10px; padding: 26px 22px;">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--accent, #2a6fdb); font-weight: 500;">STAGE 02</div>
+        <h3 style="font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 21px; margin: 8px 0 10px;">Object-Centric State Tracking</h3>
+        <p style="margin: 0; color: var(--muted); font-size: 15.5px; line-height: 1.6;">Constructs spatiotemporal tubelets, recovers tracks lost to transformations via proximity and semantic priors, and queries the VLM at temporal transitions for open-ended state-change detection and inter-object interaction analysis.</p>
+      </div>
+      <div style="border: 1px solid rgba(22,32,46,0.10); border-radius: 10px; padding: 26px 22px;">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--accent, #2a6fdb); font-weight: 500;">STAGE 03</div>
+        <h3 style="font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 21px; margin: 8px 0 10px;">Human-like Anomaly Reasoning</h3>
+        <p style="margin: 0; color: var(--muted); font-size: 15.5px; line-height: 1.6;">A cascaded chain-of-thought separates expected process actions from failure outcomes, then visually verifies candidate anomalies &mdash; yielding a structured report with type, severity, grounded frames, affected objects, and a causal explanation.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== DEMO VIDEO ===== -->
+  <section id="video" style="padding: 56px 0 8px; scroll-margin-top: 24px;">
+    <h2 style="font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent, #2a6fdb); text-align: center; margin: 0 0 24px;">Demo</h2>
+    <div style="border: 1px solid rgba(22,32,46,0.10); border-radius: 10px; overflow: hidden; background: #0c1018;">
+      <video controls preload="none" poster="static/images/teaser.png" style="width: 100%; display: block;">
+        <source src="static/videos/demo.mp4" type="video/mp4">
+      </video>
+    </div>
+    <p style="text-align: center; margin: 14px auto 0; color: var(--muted); font-size: 14.5px; max-width: 700px;">Replace <code style="font-family: 'JetBrains Mono', monospace; font-size: 13px; background: #f1f3f6; padding: 1px 6px; border-radius: 4px;">static/videos/demo.mp4</code> with your reasoning-trace walkthrough.</p>
+  </section>
+
+  <!-- ===== DATASETS ===== -->
+  <section style="padding: 56px 0 8px;">
+    <h2 style="font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent, #2a6fdb); text-align: center; margin: 0 0 8px;">Benchmarks</h2>
+    <p style="text-align: center; max-width: 720px; margin: 0 auto 30px; color: var(--muted); font-size: 17px;">Three object-centric IVAD benchmarks, re-annotated with fine-grained object trajectories across frames via a generalizable data curation pipeline.</p>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px;">
+      <div style="border: 1px solid rgba(22,32,46,0.10); border-radius: 10px; padding: 26px;">
+        <h3 style="font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 23px; margin: 0 0 6px;">Phys-AD</h3>
+        <p style="margin: 0 0 18px; color: var(--muted); font-size: 15px; line-height: 1.55;">Physics-grounded videos from a real robot arm and motor. Anomalies require reasoning over interactions such as pressing, rotating, and grasping.</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div><div style="font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 21px;">6,434</div><div style="font-size: 12.5px; color: var(--muted);">videos &middot; 60 FPS</div></div>
+          <div><div style="font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 21px;">22</div><div style="font-size: 12.5px; color: var(--muted);">object categories</div></div>
+          <div><div style="font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 21px;">47</div><div style="font-size: 12.5px; color: var(--muted);">defect types</div></div>
+          <div><div style="font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 21px;">AUROC</div><div style="font-size: 12.5px; color: var(--muted);">video &amp; type-level</div></div>
+        </div>
+      </div>
+      <div style="border: 1px solid rgba(22,32,46,0.10); border-radius: 10px; padding: 26px;">
+        <h3 style="font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 23px; margin: 0 0 6px;">LiquidAD</h3>
+        <p style="margin: 0 0 18px; color: var(--muted); font-size: 15px; line-height: 1.55;">Liquid-transfer anomalies in automated labs &mdash; each video records a transfer from 8 parallel pipettes into 8 test tubes, a cluttered multi-instance scene.</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div><div style="font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 21px;">2,251</div><div style="font-size: 12.5px; color: var(--muted);">videos &middot; 30 FPS</div></div>
+          <div><div style="font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 21px;">8&times;8</div><div style="font-size: 12.5px; color: var(--muted);">pipettes &rarr; tubes</div></div>
+          <div><div style="font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 21px;">video</div><div style="font-size: 12.5px; color: var(--muted);">+ frame-level labels</div></div>
+          <div><div style="font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 21px;">multi</div><div style="font-size: 12.5px; color: var(--muted);">instance tracking</div></div>
+        </div>
+      </div>
+      <div style="border: 1px solid rgba(22,32,46,0.10); border-radius: 10px; padding: 26px;">
+        <h3 style="font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 23px; margin: 0 0 6px;">IPAD</h3>
+        <p style="margin: 0 0 18px; color: var(--muted); font-size: 15px; line-height: 1.55;">Industrial-manufacturing processes that define anomalies as deviations from reference normal samples rather than physical commonsense.</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div><div style="font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 21px;">~2,000</div><div style="font-size: 12.5px; color: var(--muted);">process clips</div></div>
+          <div><div style="font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 21px;">16</div><div style="font-size: 12.5px; color: var(--muted);">device types</div></div>
+          <div><div style="font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 21px;">synth</div><div style="font-size: 12.5px; color: var(--muted);">+ real footage</div></div>
+          <div><div style="font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 21px;">ref.</div><div style="font-size: 12.5px; color: var(--muted);">based deviation</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LiquidAD object-centric tracking showcase -->
+    <div style="margin-top: 22px; border: 1px solid rgba(22,32,46,0.10); border-radius: 10px; padding: 22px; background: #fafbfc;">
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--accent, #2a6fdb); font-weight: 500; margin-bottom: 12px;">LIQUIDAD &middot; PER-INSTANCE STATE TRACKING</div>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+        <figure style="margin: 0;">
+          <img src="static/images/liquidad_masks.png" alt="Instance masks" style="width: 100%; height: 118px; object-fit: cover; display: block; border-radius: 6px; background: #000;">
+          <figcaption style="margin-top: 7px; font-size: 12px; color: var(--muted);">Instance masks</figcaption>
+        </figure>
+        <figure style="margin: 0;">
+          <img src="static/images/liquidad_f1.jpg" alt="Tracked pipettes t1" style="width: 100%; height: 118px; object-fit: cover; display: block; border-radius: 6px;">
+          <figcaption style="margin-top: 7px; font-size: 12px; color: var(--muted);">Descend &middot; 8 pipettes</figcaption>
+        </figure>
+        <figure style="margin: 0;">
+          <img src="static/images/liquidad_f2.jpg" alt="Tracked pipettes t2" style="width: 100%; height: 118px; object-fit: cover; display: block; border-radius: 6px;">
+          <figcaption style="margin-top: 7px; font-size: 12px; color: var(--muted);">Aspirate &middot; contours held</figcaption>
+        </figure>
+        <figure style="margin: 0;">
+          <img src="static/images/liquidad_f3.jpg" alt="Dispense t3" style="width: 100%; height: 118px; object-fit: cover; display: block; border-radius: 6px;">
+          <figcaption style="margin-top: 7px; font-size: 12px; color: var(--muted);">Dispense &middot; liquid transfer</figcaption>
+        </figure>
+      </div>
+      <p style="margin: 14px 0 0; color: var(--muted); font-size: 14px; line-height: 1.55;">Each of the eight pipettes is segmented and tracked as a distinct object across the transfer, so O-VAD can flag a single mis-dispensing tip in a cluttered scene where frame-level VLMs collapse to a &ldquo;normal&rdquo; verdict.</p>
+    </div>
+  </section>
+
+  <!-- ===== QUANTITATIVE RESULTS ===== -->
+  <section style="padding: 56px 0 8px;">
+    <h2 style="font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent, #2a6fdb); text-align: center; margin: 0 0 8px;">Results</h2>
+    <p style="text-align: center; max-width: 760px; margin: 0 auto 30px; color: var(--muted); font-size: 17px;">Despite using no labeled training data, knowledge injection, or predefined taxonomies, O-VAD surpasses trained baselines and avoids the false-negative collapse of caption-level methods across <b style="color: var(--ink);">three</b> industrial benchmarks.</p>
+
+    <div style="overflow-x: auto; border: 1px solid rgba(22,32,46,0.10); border-radius: 10px;">
+      <table style="border-collapse: collapse; width: 100%; min-width: 900px; font-size: 13.5px;">
+        <thead>
+          <tr style="background: #f7f8fa; text-align: center;">
+            <th rowspan="2" style="padding: 10px 10px; font-weight: 600; border-bottom: 1px solid rgba(22,32,46,0.18); text-align: left;">Dataset</th>
+            <th rowspan="2" style="padding: 10px 8px; font-weight: 600; border-bottom: 1px solid rgba(22,32,46,0.18);">Level</th>
+            <th rowspan="2" style="padding: 10px 8px; font-weight: 600; border-bottom: 1px solid rgba(22,32,46,0.18); text-align: left;">Metric</th>
+            <th colspan="2" style="padding: 9px 8px; font-weight: 600; border-bottom: 1px solid rgba(22,32,46,0.12); border-left: 1px solid rgba(22,32,46,0.12);">[Trad.]</th>
+            <th colspan="2" style="padding: 9px 8px; font-weight: 600; border-bottom: 1px solid rgba(22,32,46,0.12); border-left: 1px solid rgba(22,32,46,0.12);">[Direct Prompting]</th>
+            <th colspan="2" style="padding: 9px 8px; font-weight: 600; border-bottom: 1px solid rgba(22,32,46,0.12); border-left: 1px solid rgba(22,32,46,0.12);">[Workflow]</th>
+            <th colspan="1" style="padding: 9px 8px; font-weight: 600; border-bottom: 1px solid rgba(22,32,46,0.12); border-left: 1px solid rgba(22,32,46,0.12); color: var(--accent, #2a6fdb);">[O-VAD (Ours)]</th>
+          </tr>
+          <tr style="background: #f7f8fa; text-align: center; font-size: 12.5px;">
+            <th style="padding: 6px 8px; font-weight: 500; border-bottom: 1px solid rgba(22,32,46,0.18); border-left: 1px solid rgba(22,32,46,0.12);">MNAD.p<sup>&dagger;</sup></th>
+            <th style="padding: 6px 8px; font-weight: 500; border-bottom: 1px solid rgba(22,32,46,0.18);">S3R<sup>&dagger;</sup></th>
+            <th style="padding: 6px 8px; font-weight: 500; border-bottom: 1px solid rgba(22,32,46,0.18); border-left: 1px solid rgba(22,32,46,0.12);">Qwen3<sup>*</sup></th>
+            <th style="padding: 6px 8px; font-weight: 500; border-bottom: 1px solid rgba(22,32,46,0.18);">GPT-5<sup>*</sup></th>
+            <th style="padding: 6px 8px; font-weight: 500; border-bottom: 1px solid rgba(22,32,46,0.18); border-left: 1px solid rgba(22,32,46,0.12);">URF<sup>*</sup></th>
+            <th style="padding: 6px 8px; font-weight: 500; border-bottom: 1px solid rgba(22,32,46,0.18);">VERA<sup>&dagger;</sup></th>
+            <th style="padding: 6px 8px; font-weight: 600; border-bottom: 1px solid rgba(22,32,46,0.18); border-left: 1px solid rgba(22,32,46,0.12); color: var(--accent, #2a6fdb);">+GPT-5<sup>*</sup></th>
+            
+          </tr>
+        </thead>
+        <tbody style="text-align: center;">
+          <!-- ===================== PHYS-AD ===================== -->
+          <tr>
+            <td rowspan="7" style="text-align: left; padding: 8px 10px; font-weight: 700; font-family: 'Source Serif 4', serif; font-size: 16px; vertical-align: middle;">Phys-AD</td>
+            <td rowspan="5" style="padding: 8px; color: var(--muted); vertical-align: middle;">video</td>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08);">Acc</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(214,116,116,0.14);">0.635</td><td style="padding: 7px 9px;">0.591</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.454</td><td style="padding: 7px 9px; background: rgba(214,116,116,0.30);">0.640</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.329</td><td style="padding: 7px 9px;">0.470</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.592</td>
+          </tr>
+          <tr>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08);">P</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.713</td><td style="padding: 7px 9px; background: rgba(214,116,116,0.14);">0.739</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.717</td><td style="padding: 7px 9px;">0.690</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(214,116,116,0.30);">0.853</td><td style="padding: 7px 9px;">0.500</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.724</td>
+          </tr>
+          <tr>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08);">R</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(214,116,116,0.30);">0.803</td><td style="padding: 7px 9px;">0.645</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.368</td><td style="padding: 7px 9px;">0.580</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.053</td><td style="padding: 7px 9px;">0.050</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.625</td>
+          </tr>
+          <tr>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08);">F1</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(214,116,116,0.30);">0.755</td><td style="padding: 7px 9px;">0.689</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.486</td><td style="padding: 7px 9px;">0.630</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.100</td><td style="padding: 7px 9px;">0.091</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.621</td>
+          </tr>
+          <tr>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08);">AUC</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.495</td><td style="padding: 7px 9px; background: rgba(214,116,116,0.14);">0.555</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.513</td><td style="padding: 7px 9px;">0.502</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.426</td><td style="padding: 7px 9px;">0.456</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(214,116,116,0.30); font-weight: 700;">0.584</td>
+          </tr>
+          <tr>
+            <td rowspan="2" style="padding: 8px; color: var(--muted); vertical-align: middle; border-top: 1px solid rgba(22,32,46,0.12);">type</td>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08); border-top: 1px solid rgba(22,32,46,0.12);">BERTscore</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); border-top: 1px solid rgba(22,32,46,0.12); color: var(--muted);">&ndash;</td><td style="padding: 7px 9px; border-top: 1px solid rgba(22,32,46,0.12); color: var(--muted);">&ndash;</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); border-top: 1px solid rgba(22,32,46,0.12);">0.798</td><td style="padding: 7px 9px; border-top: 1px solid rgba(22,32,46,0.12); background: rgba(150,120,206,0.30);">0.878</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); border-top: 1px solid rgba(22,32,46,0.12); color: var(--muted);">&ndash;</td><td style="padding: 7px 9px; border-top: 1px solid rgba(22,32,46,0.12); color: var(--muted);">&ndash;</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); border-top: 1px solid rgba(22,32,46,0.12);">0.803</td>
+          </tr>
+          <tr>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08);">LLM-judge</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); color: var(--muted);">&ndash;</td><td style="padding: 7px 9px; color: var(--muted);">&ndash;</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.372</td><td style="padding: 7px 9px; background: rgba(150,120,206,0.30);">0.580</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); color: var(--muted);">&ndash;</td><td style="padding: 7px 9px; color: var(--muted);">&ndash;</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); color: var(--muted);">-</td>
+          </tr>
+
+          <!-- ===================== LIQUIDAD ===================== -->
+          <tr>
+            <td rowspan="10" style="text-align: left; padding: 8px 10px; font-weight: 700; font-family: 'Source Serif 4', serif; font-size: 16px; vertical-align: middle; border-top: 2px solid rgba(22,32,46,0.30);">LiquidAD</td>
+            <td rowspan="5" style="padding: 8px; color: var(--muted); vertical-align: middle; border-top: 2px solid rgba(22,32,46,0.30);">video</td>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08); border-top: 2px solid rgba(22,32,46,0.30);">Acc</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); border-top: 2px solid rgba(22,32,46,0.30);">0.184</td><td style="padding: 7px 9px; border-top: 2px solid rgba(22,32,46,0.30);">0.631</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); border-top: 2px solid rgba(22,32,46,0.30);">0.150</td><td style="padding: 7px 9px; border-top: 2px solid rgba(22,32,46,0.30);">0.462</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); border-top: 2px solid rgba(22,32,46,0.30); background: rgba(214,116,116,0.30);">0.903</td><td style="padding: 7px 9px; border-top: 2px solid rgba(22,32,46,0.30);">0.091</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); border-top: 2px solid rgba(22,32,46,0.30); background: rgba(214,116,116,0.14);">0.868</td>
+          </tr>
+          <tr>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08);">P</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(214,116,116,0.30);">1.000</td><td style="padding: 7px 9px; background: rgba(214,116,116,0.14);">0.966</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.886</td><td style="padding: 7px 9px;">0.896</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.912</td><td style="padding: 7px 9px;">0.000</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.910</td>
+          </tr>
+          <tr>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08);">R</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.102</td><td style="padding: 7px 9px;">0.616</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.075</td><td style="padding: 7px 9px;">0.462</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(214,116,116,0.30);">0.988</td><td style="padding: 7px 9px;">0.000</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(214,116,116,0.14);">0.948</td>
+          </tr>
+          <tr>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08);">F1</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.185</td><td style="padding: 7px 9px;">0.752</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.139</td><td style="padding: 7px 9px;">0.610</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(214,116,116,0.30);">0.949</td><td style="padding: 7px 9px;">0.000</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(214,116,116,0.14);">0.929</td>
+          </tr>
+          <tr>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08);">AUC</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.453</td><td style="padding: 7px 9px; background: rgba(214,116,116,0.14);">0.651</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.489</td><td style="padding: 7px 9px;">0.465</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.365</td><td style="padding: 7px 9px;">0.534</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(214,116,116,0.30); font-weight: 700;">0.692</td>
+          </tr>
+          <tr>
+            <td rowspan="5" style="padding: 8px; color: var(--muted); vertical-align: middle; border-top: 1px solid rgba(22,32,46,0.12);">frame</td>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08); border-top: 1px solid rgba(22,32,46,0.12);">Acc</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); border-top: 1px solid rgba(22,32,46,0.12);">0.489</td><td style="padding: 7px 9px; border-top: 1px solid rgba(22,32,46,0.12);">0.601</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); border-top: 1px solid rgba(22,32,46,0.12); background: rgba(96,140,214,0.30);">0.876</td><td style="padding: 7px 9px; border-top: 1px solid rgba(22,32,46,0.12);">0.633</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); border-top: 1px solid rgba(22,32,46,0.12);">0.564</td><td style="padding: 7px 9px; border-top: 1px solid rgba(22,32,46,0.12);">0.709</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); border-top: 1px solid rgba(22,32,46,0.12);">0.458</td>
+          </tr>
+          <tr>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08);">P</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.395</td><td style="padding: 7px 9px; background: rgba(96,140,214,0.30);">0.800</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.000</td><td style="padding: 7px 9px;">0.253</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.602</td><td style="padding: 7px 9px;">0.000</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.431</td>
+          </tr>
+          <tr>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08);">R</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.589</td><td style="padding: 7px 9px;">0.590</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.000</td><td style="padding: 7px 9px;">0.134</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(96,140,214,0.30);">0.708</td><td style="padding: 7px 9px;">0.000</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(96,140,214,0.14);">0.614</td>
+          </tr>
+          <tr>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08);">F1</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.472</td><td style="padding: 7px 9px; background: rgba(96,140,214,0.30);">0.679</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.000</td><td style="padding: 7px 9px;">0.176</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.651</td><td style="padding: 7px 9px;">0.000</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.507</td>
+          </tr>
+          <tr>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08);">AUC</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.487</td><td style="padding: 7px 9px; background: rgba(96,140,214,0.30);">0.625</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.499</td><td style="padding: 7px 9px;">0.484</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.506</td><td style="padding: 7px 9px;">0.500</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(96,140,214,0.14);">0.512</td>
+          </tr>
+
+          <!-- ===================== IPAD ===================== -->
+          <tr>
+            <td rowspan="10" style="text-align: left; padding: 8px 10px; font-weight: 700; font-family: 'Source Serif 4', serif; font-size: 16px; vertical-align: middle; border-top: 2px solid rgba(22,32,46,0.30);">IPAD</td>
+            <td rowspan="5" style="padding: 8px; color: var(--muted); vertical-align: middle; border-top: 2px solid rgba(22,32,46,0.30);">video</td>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08); border-top: 2px solid rgba(22,32,46,0.30);">Acc</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); border-top: 2px solid rgba(22,32,46,0.30);">0.555</td><td style="padding: 7px 9px; border-top: 2px solid rgba(22,32,46,0.30);">0.545</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); border-top: 2px solid rgba(22,32,46,0.30);">0.531</td><td style="padding: 7px 9px; border-top: 2px solid rgba(22,32,46,0.30); background: rgba(214,116,116,0.14);">0.607</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); border-top: 2px solid rgba(22,32,46,0.30);">0.582</td><td style="padding: 7px 9px; border-top: 2px solid rgba(22,32,46,0.30); background: rgba(214,116,116,0.30);">0.658</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); border-top: 2px solid rgba(22,32,46,0.30);">0.582</td>
+          </tr>
+          <tr>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08);">P</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(214,116,116,0.14);">0.643</td><td style="padding: 7px 9px; background: rgba(214,116,116,0.30);">0.836</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.581</td><td style="padding: 7px 9px;">0.375</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.590</td><td style="padding: 7px 9px;">0.238</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.588</td>
+          </tr>
+          <tr>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08);">R</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.529</td><td style="padding: 7px 9px;">0.271</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.700</td><td style="padding: 7px 9px;">0.386</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(214,116,116,0.14);">0.929</td><td style="padding: 7px 9px;">0.089</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(214,116,116,0.30); font-weight: 700;">0.954</td>
+          </tr>
+          <tr>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08);">F1</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.581</td><td style="padding: 7px 9px;">0.409</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.635</td><td style="padding: 7px 9px;">0.388</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(214,116,116,0.30);">0.721</td><td style="padding: 7px 9px;">0.130</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(214,116,116,0.14); font-weight: 700;">0.714</td>
+          </tr>
+          <tr>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08);">AUC</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.522</td><td style="padding: 7px 9px; background: rgba(214,116,116,0.14);">0.539</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.498</td><td style="padding: 7px 9px;">0.519</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.417</td><td style="padding: 7px 9px;">0.519</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(214,116,116,0.30); font-weight: 700;">0.565</td>
+          </tr>
+          <tr>
+            <td rowspan="5" style="padding: 8px; color: var(--muted); vertical-align: middle; border-top: 1px solid rgba(22,32,46,0.12);">frame</td>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08); border-top: 1px solid rgba(22,32,46,0.12);">Acc</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); border-top: 1px solid rgba(22,32,46,0.12);">0.716</td><td style="padding: 7px 9px; border-top: 1px solid rgba(22,32,46,0.12);">0.661</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); border-top: 1px solid rgba(22,32,46,0.12);">0.703</td><td style="padding: 7px 9px; border-top: 1px solid rgba(22,32,46,0.12); background: rgba(96,140,214,0.14);">0.815</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); border-top: 1px solid rgba(22,32,46,0.12);">0.671</td><td style="padding: 7px 9px; border-top: 1px solid rgba(22,32,46,0.12); background: rgba(96,140,214,0.30);">0.852</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); border-top: 1px solid rgba(22,32,46,0.12);">0.515</td>
+          </tr>
+          <tr>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08);">P</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(96,140,214,0.30);">0.410</td><td style="padding: 7px 9px;">0.309</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.114</td><td style="padding: 7px 9px;">0.273</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.331</td><td style="padding: 7px 9px;">0.000</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.291</td>
+          </tr>
+          <tr>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08);">R</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.006</td><td style="padding: 7px 9px; background: rgba(96,140,214,0.14);">0.166</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.003</td><td style="padding: 7px 9px;">0.119</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.164</td><td style="padding: 7px 9px;">0.000</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(96,140,214,0.30); font-weight: 700;">0.477</td>
+          </tr>
+          <tr>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08);">F1</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.012</td><td style="padding: 7px 9px;">0.216</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.006</td><td style="padding: 7px 9px;">0.165</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(96,140,214,0.14);">0.220</td><td style="padding: 7px 9px;">0.000</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(96,140,214,0.30); font-weight: 700;">0.338</td>
+          </tr>
+          <tr>
+            <td style="text-align: left; padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.08);">AUC</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.430</td><td style="padding: 7px 9px;">0.495</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.497</td><td style="padding: 7px 9px; background: rgba(96,140,214,0.30);">0.532</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12);">0.512</td><td style="padding: 7px 9px;">0.490</td>
+            <td style="padding: 7px 9px; border-left: 1px solid rgba(22,32,46,0.12); background: rgba(96,140,214,0.14);">0.518</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin: 12px 2px 0; color: var(--muted); font-size: 13px;"><sup>&dagger;</sup>&nbsp;= trained&nbsp; &middot; &nbsp;<sup>*</sup>&nbsp;= training-free.&nbsp; Colored cells = best; lighter ones = 2nd best. Evaluated at video-, type-, and frame-level across <b style="color: var(--ink);">Phys-AD</b>, <b style="color: var(--ink);">LiquidAD</b>, and <b style="color: var(--ink);">IPAD</b>.</p>
+  </section>
+
+  <!-- ===== QUALITATIVE ===== -->
+  <section style="padding: 56px 0 8px;">
+    <h2 style="font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent, #2a6fdb); text-align: center; margin: 0 0 8px;">Qualitative Results</h2>
+    <p style="text-align: center; max-width: 760px; margin: 0 auto 30px; color: var(--muted); font-size: 17px;">Object-centric evidence shapes reasoning quality. Compared against GPT-5 prompted with the same chain-of-thought but no object grounding.</p>
+
+    <!-- reasoning trace comparison -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px;">
+      <div style="border: 1px solid rgba(22,32,46,0.12); border-radius: 10px; overflow: hidden;">
+        <div style="padding: 12px 18px; background: #f7f8fa; border-bottom: 1px solid rgba(22,32,46,0.10); display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-weight: 600;">GPT-5 &mdash; frame-level prompting</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #b3242b; font-weight: 600;">&#10007; MISS</span>
+        </div>
+        <div style="padding: 18px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #2b3543;">
+          <span style="color: var(--muted);">"is_anomalous":</span> "No",<br>
+          <span style="color: var(--muted);">"anomaly_type":</span> "None",<br>
+          <span style="color: var(--muted);">"reason":</span> "normal deformation under<br>controlled pressure&hellip; no leakage."
+        </div>
+      </div>
+      <div style="border: 1px solid rgba(42,111,219,0.45); border-radius: 10px; overflow: hidden;">
+        <div style="padding: 12px 18px; background: rgba(42,111,219,0.07); border-bottom: 1px solid rgba(42,111,219,0.25); display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-weight: 600;">O-VAD &mdash; object state tracking</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #1f8a5b; font-weight: 600;">&#10003; DETECTED</span>
+        </div>
+        <div style="padding: 18px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #2b3543;">
+          <span style="color: var(--muted);">"overall_anomaly":</span> "yes",<br>
+          <span style="color: var(--muted);">"anomaly_type":</span> "leakage",<br>
+          <span style="color: var(--muted);">"object":</span> "Toothpaste Tube",<br>
+          <span style="color: var(--muted);">"anomaly_segments":</span> [[170, 179]]
+        </div>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div style="border: 1px solid rgba(22,32,46,0.10); border-radius: 10px; padding: 24px 22px;">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--accent, #2a6fdb); font-weight: 500;">CASE 1 &middot; PLASTIC BOTTLE ROTATION</div>
+        <h3 style="font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 20px; margin: 8px 0 10px;">Loss of containment</h3>
+        <p style="margin: 0; color: var(--muted); font-size: 15px; line-height: 1.6;">A clamped bottle leaks severely at frames&nbsp;60&ndash;80. GPT-5 reports &ldquo;no leakage.&rdquo; O-VAD tracks progressive deformation (0&ndash;60), detects material release at frame&nbsp;60, and classifies a high-severity <b style="color: var(--ink);">loss-of-containment</b> anomaly &mdash; attributing it to repeated clamp-induced stress.</p>
+      </div>
+      <div style="border: 1px solid rgba(22,32,46,0.10); border-radius: 10px; padding: 24px 22px;">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--accent, #2a6fdb); font-weight: 500;">CASE 2 &middot; HINGE SCREW FASTENING</div>
+        <h3 style="font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 20px; margin: 8px 0 10px;">Cross-object diagnosis</h3>
+        <p style="margin: 0; color: var(--muted); font-size: 15px; line-height: 1.6;">Three defects co-occur: repeated screw back-out (30&ndash;110), head-slot stripping (80&ndash;90), and screwdriver shaft bending (60&ndash;100). GPT-5 concludes normal tightening; O-VAD captures all three streams and synthesizes them into a coherent <b style="color: var(--ink);">torque-control / bit-mismatch failure</b> hypothesis.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ABLATIONS ===== -->
+  <section style="padding: 56px 0 8px;">
+    <h2 style="font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent, #2a6fdb); text-align: center; margin: 0 0 8px;">Ablations</h2>
+    <p style="text-align: center; max-width: 760px; margin: 0 auto 30px; color: var(--muted); font-size: 17px;">Removing one module at a time on four Phys-AD subsets (sticky roller, liquid, screw, rubber band) isolates each component's contribution.</p>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div style="border: 1px solid rgba(22,32,46,0.10); border-radius: 10px; padding: 24px;">
+        <div style="display:flex; align-items:baseline; gap:10px;"><span style="font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 22px; color: #b3242b;">&minus;100%</span><h3 style="font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 18px; margin: 0;">State tracking is indispensable</h3></div>
+        <p style="margin: 10px 0 0; color: var(--muted); font-size: 15px; line-height: 1.6;">Removing it collapses the system to &ldquo;all normal&rdquo; &mdash; P/R/F1 fall to zero on three of four subsets. BERT scores stay high on fluent-but-empty output, showing text metrics alone can't judge detection.</p>
+      </div>
+      <div style="border: 1px solid rgba(22,32,46,0.10); border-radius: 10px; padding: 24px;">
+        <div style="display:flex; align-items:baseline; gap:10px;"><span style="font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 22px; color: var(--accent, #2a6fdb);">&minus;0.25</span><h3 style="font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 18px; margin: 0;">Captioning anchors the scene</h3></div>
+        <p style="margin: 10px 0 0; color: var(--muted); font-size: 15px; line-height: 1.6;">Video-level captions supply a global semantic prior. Removing them drops AUC by up to 0.247 on holistic-behavior anomalies, while localized defects (screw) are unaffected.</p>
+      </div>
+      <div style="border: 1px solid rgba(22,32,46,0.10); border-radius: 10px; padding: 24px;">
+        <div style="display:flex; align-items:baseline; gap:10px;"><span style="font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 22px; color: var(--accent, #2a6fdb);">+0.09</span><h3 style="font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 18px; margin: 0;">Structured CoT calibrates</h3></div>
+        <p style="margin: 10px 0 0; color: var(--muted); font-size: 15px; line-height: 1.6;">The cascaded six-step reasoning chain lifts AUC by 0.038&ndash;0.091 over a generic &ldquo;think step by step&rdquo; prompt and yields more faithful, better-calibrated explanations.</p>
+      </div>
+      <div style="border: 1px solid rgba(22,32,46,0.10); border-radius: 10px; padding: 24px;">
+        <div style="display:flex; align-items:baseline; gap:10px;"><span style="font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 22px; color: var(--accent, #2a6fdb);">&minus;0.18</span><h3 style="font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 18px; margin: 0;">Verification safeguards</h3></div>
+        <p style="margin: 10px 0 0; color: var(--muted); font-size: 15px; line-height: 1.6;">Multiplicative confidence gating re-examines borderline candidates against evidence frames. Removing it degrades AUC by up to 0.178 and sharpens true-vs-ambiguous separation.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== BIBTEX ===== -->
+  <section id="bibtex" style="padding: 56px 0 8px; scroll-margin-top: 24px;">
+    <h2 style="font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent, #2a6fdb); text-align: center; margin: 0 0 24px;">BibTeX</h2>
+    <div style="position: relative; background: #0d1117; border-radius: 10px; padding: 24px 26px; overflow-x: auto;">
+      <button onClick="{{ copyBib }}" style="position: absolute; top: 14px; right: 14px; background: rgba(255,255,255,0.08); color: #cdd6e3; border: 1px solid rgba(255,255,255,0.14); border-radius: 6px; padding: 6px 12px; font-size: 12.5px; font-family: 'Source Sans 3', sans-serif; cursor: pointer; font-weight: 600;">Copy</button>
+      <pre id="ovad-bibtex" style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13.5px; line-height: 1.7; color: #cdd6e3; white-space: pre;">@inproceedings{yuan2026ovad,
+  title     = {O-VAD: Industrial Video Anomaly Detection through
+               Object-Centric Tracking and Reasoning},
+  author    = {Yuan, Mei and Long, Qi and Wu, Qifeng and Li, Zhenyang and
+               Zhao, Yizhou and Wang, Lei and Liu, Yang and Xu, Min},
+  booktitle = {Proceedings of the European Conference on Computer Vision (ECCV)},
+  year      = {2026},
+  url       = {https://o-vad.github.io/}
+}</pre>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer style="padding: 48px 0 64px; margin-top: 40px; border-top: 1px solid rgba(22,32,46,0.10); text-align: center; color: var(--muted); font-size: 14px; line-height: 1.7;">
+    <p style="margin: 0 0 6px;"><b style="color: var(--ink);">O-VAD</b> &middot; ECCV 2026 &middot; <a href="https://o-vad.github.io/">o-vad.github.io</a></p>
+    <p style="margin: 0;">Add your demo video at <code style="font-family: 'JetBrains Mono', monospace; font-size: 13px;">static/videos/demo.mp4</code> and point the Code button to your repository before publishing.</p>
+  </footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1080,&quot;height&quot;:760},&quot;accentColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#2a6fdb&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#2a6fdb&quot;,&quot;#1f8a5b&quot;,&quot;#b3242b&quot;,&quot;#7c3aed&quot;,&quot;#0f172a&quot;]},&quot;githubUrl&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;https://github.com/o-vad/O-VAD&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  componentDidMount() { this.applyAccent(); }
+  componentDidUpdate() { this.applyAccent(); }
+  applyAccent() {
+    const a = this.props.accentColor;
+    if (a) document.documentElement.style.setProperty('--accent', a);
+  }
+  renderVals() {
+    return {
+      githubUrl: this.props.githubUrl ?? 'https://github.com/o-vad/O-VAD',
+      copyBib: () => {
+        const el = document.getElementById('ovad-bibtex');
+        if (!el) return;
+        navigator.clipboard.writeText(el.innerText).catch(() => {});
+      },
+    };
+  }
+}
+</script>
+</body>
+</html>

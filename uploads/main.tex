@@ -1,0 +1,675 @@
+\documentclass[runningheads]{llncs}
+\usepackage{float}
+\usepackage{eccv}
+
+
+\usepackage{eccvabbrv}
+
+% Include other packages here, before hyperref.
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor} 
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{colortbl}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{pifont}
+% \usepackage[ruled]{algorithm2e}
+\usepackage{wrapfig}
+\usepackage{enumitem}
+
+\usepackage[accsupp]{axessibility}  %
+\usepackage{tcolorbox}
+\usepackage{float}
+\tcbuselibrary{breakable}
+\usepackage{listings}
+
+\definecolor{promptbg}{HTML}{FBF3FB}      % light purple background
+\definecolor{promptframe}{HTML}{F0E0F0}   % slightly darker purple border
+
+
+\definecolor{cellRed}{HTML}{F3D9DA}        % best
+\definecolor{cellRedLight}{HTML}{FAECEC}   % 2nd
+
+
+\definecolor{cellYellow}{HTML}{ECD8F0}     % best
+\definecolor{cellYellowLight}{HTML}{F6EBF8} % 2nd
+
+
+\definecolor{cellBlue}{HTML}{C9EAF6}      % best
+\definecolor{cellBlueLight}{HTML}{E4F4FB} % 2nd
+
+
+\definecolor{cellPurple}{HTML}{ECD8F0}     % type/BERT best
+\definecolor{cellPurpleLight}{HTML}{F6EBF8} % type/BERT 2nd
+
+
+\newtcolorbox{promptbox}[1][]{%
+  colback=promptbg,
+  colframe=promptframe,
+  coltitle=black,
+  fonttitle=\small\bfseries,
+  title={#1},
+  breakable,
+  boxrule=0.6pt,
+  arc=2pt,
+  left=6pt, right=6pt, top=4pt, bottom=4pt,
+}
+
+% Highlight command for key instruction phrases
+\newcommand{\hlp}[1]{\colorbox{green!15}{#1}}
+\definecolor{degraded}{RGB}{255,224,194}   % light orange
+\newcommand{\cc}{\cellcolor{degraded}}
+
+
+\usepackage{hyperref}
+
+
+
+\begin{document}
+
+
+\title{O-VAD: Industrial Video Anomaly Detection through Object-Centric Tracking and Reasoning} 
+
+
+\titlerunning{O-VAD}
+
+
+\author{Mei Yuan\inst{1} \and
+Qi Long\inst{1}\and
+Qifeng Wu\inst{1}\and
+Zhenyang Li\inst{2}\and
+Yizhou Zhao\inst{1}\and
+Lei Wang\inst{3}\and
+Yang Liu\inst{1}\and
+Min Xu\inst{1}\thanks{Corresponding author.}
+}
+
+
+\authorrunning{M.~Yuan et al.}
+
+
+\institute{Carnegie Mellon University, USA \and
+University of Alabama at Birmingham, USA \and
+Griffith University, Australia\\
+\email{meiyuan@andrew.cmu.edu}, \email{mxu1@cs.cmu.edu} \\
+\url{https://o-vad.github.io/}}
+
+\maketitle
+
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{figures/intro.pdf}
+    \caption{\textbf{Why object state evolution matters for industrial anomaly detection.} The toothpaste tube undergoes pressing and deformation before a subtle leakage emerges. Traditional methods predict binary classifications. VLM prompting fails to detect it due to the lack of evidence. O-VAD tracks object-wise state changes and produces an open-ended anomaly report with in-depth analysis.}
+    \label{fig:intro}
+\end{figure}
+
+
+
+
+\begin{abstract}
+Industrial Video Anomaly Detection (IVAD) aims to identify anomalous objects and events in an industrial process, which is crucial for modern manufacturing and quality control systems.
+Existing VLM-based anomaly reasoning methods are capable of detecting open-ended anomalies in general domains. However, their performance declines in industrial settings characterized by intricate object transformations, strict physics, and procedural constraints.
+To tackle the complexity of such interaction-intensive detection, we introduce a training-free agentic framework \textit{\textbf{O-VAD}} for anomaly detection free of domain-specific knowledge, emphasizing object state evolution like humans inspectors.
+It is designed to track spatial-temporal dynamics and underlying transformations of detected objects over time, and then reason over the object-wise temporal state trajectories to identify abnormal objects in grounded frames.
+Our method overcomes limitations of prior approaches that rely on retraining on normal clips or injecting domain knowledge as context for test-time inference.
+Extensive experiments on three IVAD datasets demonstrate that our method outperforms frontier VLMs, agentic frameworks, and traditional VAD methods fine-tuned on the respective datasets, while providing interpretable reports over anomaly processes and types.
+
+
+\keywords{Industrial Anomaly Detection \and Agentic Reasoning \and Vision-Language Models}
+\end{abstract}
+
+
+\section{Introduction}
+
+
+Industrial Video Anomaly Detection (IVAD) aims to identify anomalous objects and events in an industrial video process. 
+It plays a critical role in modern manufacturing and quality control systems, where automated visual inspection can significantly reduce costs and improve production reliability~\cite{liu2024ipad}. 
+Industrial processes are extremely challenging and different from general domains, since they are usually characterized by: (i) \textit{complex object transformations}: objects undergo substantial physical and functional state changes through cutting, assembly, heating, pressing, and other manufacturing operations;
+(ii) \textit{strict physical and procedural constraints}: anomalies manifest as violations of expected spatial configurations, periodic procedures, or physical laws;
+(iii) \textit{high interpretability requirements}: 
+operators need explicit explanations of detected anomalies for root cause analysis and corrective actions. 
+
+Traditional Video Anomaly Detection (VAD) methods primarily adopt two paradigms: reconstruction-based approaches~\cite{he2024mambaad, fan2024revitalizing, zavrtanik2021draem, zhang2024realnet, zhangdiffusionad, fang2023fastrecon} reconstruct anomalous samples to their corresponding normal counterparts and calculate the reconstruction error, and embedding-based~\cite{jiang2022softpatch, hyun2024reconpatch, roth2022towards, defard2021padim, guo2025dinomaly} methods focus on modeling the feature embeddings of normal samples and measure deviations.
+But they typically follow the “one-class-one-model” learning paradigm, requiring plentiful normal samples for each object class to learn its distribution~\cite{gu2024anomalygpt}, 
+which makes it impractical for industrial anomaly detection settings and less suitable for dynamic production environments.
+Given that \textbf{\textit{traditional VADs have limited generalization abilities and binary classifications provide no semantic rationale for their decisions}}, recent works~\cite{huang2025vad, lin2025unified, lin2025vlm, zhao2025omniad, kangjudo, gu2024anomalygpt, zhu2025vau, zou2026unlocking} propose a series of VLM-based anomaly detection methods, featuring semantic anomaly understanding and test-time detection inference.
+
+Although VLMs have unlocked their potential for detecting anomalies augmented with semantic-visual understanding in general domains, there are still two issues that remain up in the air:
+(1) Their performance in industrial settings declined due to \textit{lack of domain-specific knowledge and fine-grained annotations}.
+Recent training-free studies~\cite{jiang2024mmad} provide external knowledge or normal samples in context for test-time inference to alleviate this limitation. 
+However, \textbf{\textit{they heavily rely on sophisticated prompt design to caption videos, inject knowledge, and then assign anomaly scores by off-the-shelf VLMs}}. The overly dependence on external context leads to misaligned responses that prioritize contextual plausibility over accuracy~\cite{kangjudo}.
+% 
+(2) Video/frame level features or descriptions have \textit{weak understanding of localized details within objects over time}, which hinders their reliable and accurate interaction-intensive IVAD reasoning.
+% 
+Some VLM-based methods exploited the spatio-temporal fusion~\cite{wu2024weakly, li2022scale,liu2019exploring, sun2023long, wu2021weakly}, and detect anomalies from when and where perspectives~\cite{lin2025unified, huang2022hierarchical}.
+However, \textbf{\textit{they lose focus on object-centric physics and interactions over time}}. It is the core when human inspectors detect object-centric state changes throughout industrial processes, especially when objects undergo substantial physical and functional state changes.
+
+To tackle these two issues, we propose \textbf{\textit{O-VAD}}, a training-free agentic framework that detects anomalies by tracking object state evolution over time---free of any domain-specific knowledge, labels, or predefined anomaly taxonomy.
+(1) For the first issue, rather than injecting external knowledge or relying on complex prompt design, O-VAD enables the VLM to \emph{build its own understanding} through a ``ground$\rightarrow$track$\rightarrow$reason'' agentic pipeline. Objects are first detected and segmented via \textbf{\textit{VLM-grounded masking}} with SAM3~\cite{carion2025sam}, then continuously tracked and queried across frames to accumulate structured evidence. A cascaded chain-of-thought (CoT)
+then derives anomaly judgments from the VLM's own internalized commonsense and physical knowledge, mirroring the cognitive process of human inspectors.
+(2) For the second issue, we shift the unit of analysis from holistic frames to individual objects. An \textbf{\emph{object state tracker}} maintains per-object representations and queries the VLM at key temporal transitions to capture fine-grained state changes, \eg deformation, material release, surface alteration. These structured state trajectories ground the downstream reasoning, making detection both \emph{object-centric} and \emph{spatio-temporally aware}, and yielding \emph{open-ended}, \emph{fine-grained} outputs: anomaly types, grounded abnormal frames, affected objects, and causal analyses.
+%
+%
+
+Result-wise, despite using no labor-intensive annotations, the proposed agentic framework delivers state-of-the-art performance on any level anomaly detection, surpassing frontier VLMs and agentic frameworks on quantitative and qualitative evaluations. 
+
+To summarize our contributions:
+
+(1) We present a generalizable data curation pipeline and apply it to three object-centric IVAD datasets (IPAD, Phys-AD and LiquidAD) with fine-grained annotations of object trajectories across frames.
+
+(2) We propose a training-free, three-stage agentic reasoning framework that requires no domain-specific knowledge or fine-tuning, performing object discovery, spatiotemporal tubelet construction withy open-ended state change detection, and chain-of-thought anomaly reasoning with visual verification.
+
+(3) Our framework achieves state-of-the-art performance on three IVAD datasets at both video- and frame- levels, outperforming frontier VLMs (Qwen3-VL-32B and GPT-5), two agentic framework for VAD, and fine-tuned traditional AD methods, while providing interpretable reasoning over anomaly processes and open-ended types.    
+
+
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{\textbf{Traditional Video Anomaly Detection.}}
+Traditional video anomaly detection methods primarily adopt two paradigms: reconstruction-based approaches~\cite{he2024mambaad, fan2024revitalizing, zavrtanik2021draem, zhang2024realnet, zhangdiffusionad, fang2023fastrecon} flag anomalies by their elevated reconstruction error, while embedding-based methods~\cite{jiang2022softpatch, hyun2024reconpatch, roth2022towards, defard2021padim, guo2025dinomaly} model the feature distribution of normal samples and measure deviations from it. Despite strong benchmark performance, both share three limitations. First, they follow a ``one-class-one-model'' paradigm~\cite{gu2024anomalygpt}, requiring abundant normal samples and a separate model per object class, and must be re-trained for every unseen domain or anomaly type~\cite{li2026vadtree}, making them impractical for novel categories and dynamic production lines. Second, they are largely black-box, emitting an anomaly score without semantic rationale~\cite{wu2024weakly}, which has motivated growing interest in explainable, language-grounded anomaly understanding~\cite{li2026vadtree, zheng2026iad}. Third, they compress entire frames into holistic features, neglecting region-level cues and over-relying on dominant background context~\cite{li2025video}. Our O-VAD addresses these limitations with a training-free, object-centric framework that requires no per-class training, produces semantic explanations for its decisions, and reasons over region-level evidence.
+
+
+
+\paragraph{\textbf{Multimodal Video Anomaly Detection}}
+
+Recent works~\cite{huang2025vad, lin2025unified, lin2025vlm, zhao2025omniad, kangjudo, gu2024anomalygpt, zhu2025vau, zou2026unlocking} revisit anomaly detection with VLM-based methods, valued for their generalizability and explainability, especially in the zero/few-shot setting. These approaches rely on sophisticated prompt design that captions videos and assigns anomaly scores via off-the-shelf VLMs. To strengthen spatio-temporal awareness, some methods couple this with auxiliary temporal modeling or prompting~\cite{wu2024weakly, li2022scale, liu2019exploring, sun2023long, wu2021weakly}; for instance, a unified zero-shot framework~\cite{lin2025unified} chains temporal detection, spatial localization, and textual explanation through a test-time reasoning process over foundation models, requiring no additional training. Yet these methods largely overlook that superficial temporal caption sequences lose focus on the object-centric dynamics and interactions over time—precisely the cues human inspectors rely on to detect anomalous objects and events throughout industrial processes. In contrast, our O-VAD explicitly models object-centric spatio-temporal evidence while retaining the training-free and explainable advantages of VLM-based detection.
+
+
+
+
+
+
+
+\section{Method}
+\label{sec:method}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=1\linewidth]{figures/framework.pdf}
+    \caption{\textbf{Overview of O-VAD.} \textbf{(a)}~Stage~1 samples multiple frames and queries a VLM to discover all objects, then segments them with SAM to produce initial masks and metadata. \textbf{(b)}~Stage~2 constructs spatiotemporal tubelets via CropFormer~\cite{qi2022high} and SAM2\cite{ravi2024sam2}, recovers missing tracks through semantic and proximity priors, and query the VLM for open-ended state change detection and inter-object interaction analysis. \textbf{(c)}~Stage~3 feeds the accumulated object metadata and state change events into a multi-step chain-of-thought reasoning chain that distinguishes process actions from failure outcomes, followed by visual verification of candidate anomalies.}
+    \label{fig:framework}
+\end{figure}
+
+
+\paragraph{\textbf{Overview.}}
+
+
+Given an industrial process video $\mathcal{V}=\{I_t\}_{t=1}^{T}$, O-VAD produces a structured anomaly report for each detected anomaly, it outputs the anomaly type, severity, affected object, temporal localization, and a natural-language causal explanation---all without any domain-specific knowledge, predefined taxonomy, or training data.
+% 
+To achieve this, O-VAD adopts a three-stage agentic pipeline (Fig.~\ref{fig:framework}).
+Stage~1 (\S\ref{sec:stage1}) discovers and segments all task-relevant objects via VLM-grounded masking with SAM~\cite{carion2025sam}, rather than manual annotation.
+Stage~2 (\S\ref{sec:stage2}) tracks each object through potential state trajectories via spatiotemporal partitioning, querying the VLM at temporal transitions to detect fine-grained state changes and produce per-object state trajectories.
+Stage~3 (\S\ref{sec:stage3}) reasons over the accumulated evidence through a multi-step chain-of-thought that separates abnormal stage changes from expected process outcomes, yielding anomaly judgments grounded in the VLM's own commonsense and physical reasoning.
+
+
+
+
+\subsection{Problem Formulation}
+\label{sec:formulation}
+Our O-VAD decomposes the problem into an object-centric formulation. We first detect $K$ objects $\mathcal{O}=\{o_k\}_{k=1}^{K}$ with masks $\{m_k^{(t)}\}$ via VLM-grounded segmentation, then track each object's state trajectory $\mathcal{S}_k = \{(m_k^{(t)}, \phi_k^{(t)})\}_{t=1}^{T}$, where $m_k^{(t)}$ is the mask of object $k$ at frame $t$ and $\phi_k^{(t)}$ is a VLM-generated natural-language description of its physical state (\eg, name, material, surface condition, and detected state changes). Object-level anomaly reasoning is then performed as:
+%
+\begin{equation}
+    \hat{y}_{t,k} = \theta_{\text{VLM}}\!\big(p_{\text{CoT}} \oplus \mathcal{S}_k \oplus c\big), \qquad
+    \hat{y}^{\text{frm}}_t = \max_{k}\; \hat{y}_{t,k}, \qquad
+    \hat{y}^{\text{vid}} = \max_{t}\; \hat{y}^{\text{frm}}_t,
+\end{equation}
+%
+where $\hat{y}_{t,k}\in[0,1]$ is the anomaly confidence for object $k$ at frame $t$, $c$ is the optional video caption, $p_{\text{CoT}}$ is a cascaded chain-of-thought prompt that guides the VLM through cognitive anomaly reasoning, and $\oplus$ denotes concatenation of the prompt context. The frame- and video-level scores are obtained by max-pooling over objects and frames, respectively. By conditioning on per-object state trajectories $\mathcal{S}_k$ rather than raw frames alone, O-VAD produces fine-grained, open-ended anomaly predictions with grounded frames, affected objects, and causal explanations; the discrete anomaly set $\mathcal{A}$ used for reporting is obtained from these scores after the reasoning and verification of Stage~3 (\S\ref{sec:stage3}).
+
+
+\subsection{Stage~1: Automated Object Grounding}
+\label{sec:stage1}
+
+
+Rather than relying on a single reference frame, we sample a set of candidate frames $\{I_{t_j}\}_{j=1}^{N_f}$ spanning the video so that objects initially occluded or absent can still be discovered.
+For each candidate frame $I_{t_j}$, a VLM generates a structured object inventory:
+%
+\begin{equation}
+  \mathcal{O}_{t_j}
+  = \phi_{\mathrm{VLM}}(I_{t_j})
+  = \bigl\{(n_k,\, d_k,\, b_k)\bigr\}_{k=1}^{N_{t_j}},
+  \label{eq:vlm_inventory}
+\end{equation}
+%
+where $n_k$ is the object name, $d_k$ a natural-language description (material, initial state), and $b_k$ a spatial cue.
+Inventories across frames are merged into a deduplicated set $\mathcal{O}=\bigcup_j \mathcal{O}_{t_j}$.
+Each object $o_k\!\in\!\mathcal{O}$ is then segmented in a reference frame $I_1$ using SAM3~\cite{carion2025sam}:
+%
+\begin{equation}
+  m_k^{(1)} = \mathrm{SAM}(I_1,\, o_k),
+  \qquad
+  \mathcal{M}_1 = \bigl\{m_k^{(1)}\bigr\}_{k=1}^{|\mathcal{O}|}.
+  \label{eq:sam_masks}
+\end{equation}
+%
+The output of Stage~1, including initial masks $\mathcal{M}_1$ together with object metadata, grounds all subsequent tracking and reasoning in concrete, per-object evidence.
+
+
+
+
+
+
+\subsection{Stage~2: Object-Centric State Tracking}
+\label{sec:stage2}
+
+The second stage tracks each object across all frames, detecting and describing state changes even when objects undergo significant transformations. We build upon TubeletGraph~\cite{sun2025tracking} for tracking through transformations, and extend it with two novel components: object interaction analysis  and open-ended state change annotation.
+
+
+
+\paragraph{\textbf{Spatiotemporal Partitioning and Tubelet Construction}.}
+
+We construct a spatiotemporal partition $\mathcal{P}$ of the video that associates every pixel region across all frames with a tracked entity. An entity segmentation model (CropFormer~\cite{qi2022high}) produces per-frame spatial partitions $\mathcal{E}_t = \mathrm{CF}(I_t)$, and each entity $e_1^i \in \mathcal{E}_1$ (including the initial object masks $\mathcal{M}_1$) is tracked forward via SAM2~\cite{ravi2024sam2} to form tubelets:
+%
+\begin{equation}
+    \label{eq:partition}
+    \mathcal{P}_\text{init} = \{P_i\}_{i=1}^{|\mathcal{E}_1|}, \quad P_i = \{e_t^i\}_{t=1}^{T}.
+\end{equation}
+%
+New tubelets are incrementally added whenever track-less regions emerge. For each entity $\hat{e}_t^j \in \mathcal{E}_t$ at frame $t > 1$, a new tubelet is initiated if less than $\tau_\text{coverage}$ of its area is covered by existing tubelets.
+
+
+\paragraph{\textbf{State Tracking.}}
+
+To recover missing object tracks after state transformations (\eg, an object breaking apart or releasing material), candidate tracks that emerge after the initial frame are evaluated using spatial proximity and semantic consistency priors.
+
+\textit{Spatial Proximity.} For a candidate track $C = \{c_s, c_{s+1}, \ldots, c_T\}$ beginning at frame~$s$ and the prompt object track $P = \{p_1, p_2, \ldots, p_T\}$, the spatial proximity score is:
+%
+\begin{equation}
+    S_\text{prox}(C, P) = \max_{j \in \{1,2,3\}} \frac{|c_s \cap m_s^j|}{|c_s|},
+\end{equation}
+%
+where $\{m_s^j\}_{j=1}^{3}$ are the three candidate masks from SAM2's multi-mask output at frame~$s$. A candidate is considered proximal if $S_\text{prox}(C, P) > \tau_\text{prox}$.
+
+\textit{Semantic Consistency.}\quad For a mask $M$ and frame $I$, we compute the masked CLIP~\cite{radford2021clip} feature $f(M, I) = \mathrm{Pool}(\mathrm{CLIP}(I), M)$ via mask-pooling. The semantic similarity is:
+%
+\begin{equation}
+    S_\text{sem}(C, P) = \max_{\substack{i \in \{1,\ldots,s{-}1\},\\ j \in \{s,\ldots,T\}}} f(p_i, I_i) \cdot f(c_j, I_j)^\top.
+\end{equation}
+%
+The final set of valid continuation tracks is:
+%
+\begin{equation}
+    \mathcal{V} = \{C \in \mathcal{P} \mid C \text{ begins at } t > 0,\; S_\text{prox}(C, P) > \tau_\text{prox},\; S_\text{sem}(C, P) > \tau_\text{sem}\}.
+\end{equation}
+%
+The complete tracking result $\mathcal{T} = P \cup \mathcal{V}$ captures the object through transformations.
+
+
+
+
+
+% \subsubsection{Open-Ended State Change Annotation.}
+\paragraph{\textbf{State Change Detection and Understanding.}}
+For object-aware frame pairs, the VLM is prompted with masked visualizations of both frames and asked to identify state changes through visual understanding.
+% 
+Critically, we adopt an \textit{open-ended labeling scheme}: both the change type (\eg, compression deformation, material release, rotational resistance) and the change cause (\eg, object leakage, environmental lighting) are generated as free-form natural language by the VLM. This enables the system to describe novel phenomena for generalizing across diverse industrial processes.
+% 
+Each detected state change event $e$ is represented as a tuple:
+%
+\begin{equation}
+   e=(t_{\text{start}},\; t_{\text{end}},\; \textit{type},\; \textit{cause},\; \textit{desc},\; \textit{sev},\; k),
+   \label{eq:state_event}
+\end{equation}
+%
+where $t_{\text{start}}$ and $t_{\text{end}}$ are the bounding frame indices, \textit{type} is the free-form change type, \textit{cause} is the causal label, \textit{desc} is a natural-language description, $\textit{sev} \in \{\text{none}, \text{slight}, \text{moderate}, \text{severe}\}$ is the severity, and $k$ is the affected object index.
+
+
+\subsection{Stage~3: State-Aware Anomaly Reasoning}
+\label{sec:stage3}
+
+We formulate \textit{cognitive anomaly reasoning} as a cascaded chain-of-thought (CoT) task over the accumulated object states. 
+The final stage synthesizes the tracking metadata, state change events, and visual evidence into an anomaly detection decision via multi-step reasoning. 
+The key design principle is open-ended classification: the VLM is not constrained to a fixed taxonomy but reasons freely from its domain knowledge, grounded in the tracking evidence.
+Finally, we have both the anomaly set and the complete reasoning trace for full interpretability.
+
+
+\paragraph{\textbf{Cognitive Anomaly Reasoning.}}
+\label{sec:cot}
+
+The core anomaly reasoning proceeds through a cascaded chain-of-thought (CoT) that mirrors how a human quality inspector diagnoses failures.
+The VLM receives, in a single call, the object metadata, filtered state changes, inferred task context, video caption, and sampled frames, and is instructed to reason through sequential steps with confidence scores. 
+\begin{enumerate}
+    \item \textit{Process Understanding}. The VLM identifies the industrial process and its purpose, then triages each state change into expected process, potential anomaly, and normal noise. 
+    % \emph{(a)~expected process}---actions and their mechanical responses;
+    % \emph{(b)~potential anomaly}---outcomes revealing failure, flagged even when triggered by an intentional action, since exposing such failures is the purpose of the test;
+    % \emph{(c)~noise}---minor tracking artifacts and lighting variation.
+    
+    \item \textit{Observation}. The VLM cites specific object IDs, frame ranges, change types, and severities from the tracking data, focusing on events triaged as potential anomalies.
+
+    \item {\textit{Expectation}.} The VLM articulates the pass/fail criteria for the identified test, distinguishing expected mechanical responses from failure-indicating outcomes.
+
+    \item {\textit{Comparison}.} For each candidate anomaly, the VLM determines whether it represents a genuine failure outcome or a mechanical response that was mis-categorized.
+
+    \item {\textit{Causation}}. The VLM reasons about root causes without being constrained to predefined categories.
+
+    \item {\textit{Classification} \& \textit{Severity}.} A free-form anomaly type is assigned and each confirmed anomaly receives a severity rating based on its impact on task completion, safety implications, and reversibility.
+
+\end{enumerate}
+
+
+The reasoning chain outputs a set of candidate anomalies $\{a\}$, where each $a$ carries a free-form anomaly type, an affected object index, a frame range, a severity level, and an initial confidence $c_{\text{orig}}(a)\in[0,1]$ produced by the VLM. These candidates are then refined by the verification step below to form the final anomaly set $\mathcal{A}$.
+
+\paragraph{\textbf{Post Visual Verification.}}
+\label{sec:verify}
+To suppress false positives, each candidate anomaly $a$ is gated by its initial confidence $c_{\text{orig}}(a)$: anomalies with $c_{\text{orig}}(a) > \tau_{\text{hi}}$ bypass verification (they are sufficiently certain), those with $c_{\text{orig}}(a) < \tau_{\text{lo}}$ are discarded outright, and only the remaining candidates are verified against their evidence frames:
+%
+\begin{equation}
+  (\texttt{verified},\, c_{\text{ver}}) = \phi_{\text{VLM}}\big(\{I_{t}\}_{t \in \text{evidence}},\, c,\, a\big).
+\end{equation}
+%
+The verification step explicitly checks whether the claimed anomaly is actually a normal process behavior visible in the caption $c$ or frames. The final confidence is then computed via a multiplicative gating scheme:
+%
+\begin{equation}
+  c_{\text{final}}(a) = \begin{cases}
+  c_{\text{orig}}(a) \cdot c_{\text{ver}} & \text{if } \texttt{verified} = \texttt{true}, \\
+  c_{\text{orig}}(a) \cdot (1 - c_{\text{ver}}) & \text{if } \texttt{verified} = \texttt{false},
+  \end{cases}
+  \label{eq:conf_gate}
+\end{equation}
+%
+and the anomaly is retained only if $c_{\text{final}}(a) \geq \tau_{\text{conf}}$. We use $\tau_{\text{hi}} = 0.8$, $\tau_{\text{lo}} = 0.2$, and $\tau_{\text{conf}} = 0.3$ in all experiments. The final anomaly set $\mathcal{A}$ and the complete reasoning trace together form the output report $\mathcal{R}$, providing full interpretability.
+
+
+\section{Experiment}
+
+\subsection{Experiment Setup.}
+
+\paragraph{\textbf{Datasets \& evaluation metrics.}}
+We evaluate on the official test splits of three industrial benchmarks spanning diverse anomaly types and interaction modalities. (i) \textit{Phys-AD}~\cite{li2025towards}: a large-scale, physics-grounded dataset from a real robot arm and motor, with 22 object categories and 47 defect types across 6,434 videos (60~FPS); its anomalies require physical reasoning over interactions such as pressing, rotating, and grasping. We report per-category video-level AUROC, aggregate Acc/P/R/F1 at the video and anomaly-type levels, and BERTScore for anomaly-type semantic alignment. (ii) \textit{LiquidAD}~\cite{dabouei2025deep}: liquid-transfer anomalies in automated labs, 2,251 videos (30~FPS) of 8 parallel pipettes dispensing into 8 test tubes; we report video- and frame-level Acc/P/R/F1/AUROC. (iii) \textit{IPAD}~\cite{liu2024ipad}: industrial-manufacturing processes ($\sim$2{,}000 clips over 16 device types, synthetic and real) that define anomalies as deviations from reference normal samples rather than physical commonsense; we evaluate under this reference-based protocol and report video- and frame-level metrics. For VLM-based methods, an LLM-as-judge protocol assesses whether a predicted anomaly type semantically matches the ground truth, enabling fair comparison across heterogeneous outputs. Full dataset details and per-scenario results are in the supplement (Sec.~A.1 and Sec.~B.2).
+
+
+
+\paragraph{\textbf{Hyperparameters \& experiment details.}}
+
+O-VAD is fully training-free; unless noted, we use the following defaults. \textit{Stage 1 (VLM-grounded masking)} uses GPT-5~\cite{singh2025openai} as the VLM and SAM3~\cite{carion2025sam} for concept-aware zero-shot segmentation, with a permissive detection threshold of 0.1 to maximize discovery recall. \textit{Stage 2 (object state tracking)} partitions each video into tubelets via CropFormer~\cite{qi2022high} for per-frame entity segmentation and SAM2~\cite{ravi2024sam2} for temporal propagation, sampling every 10th frame; track recovery is gated by spatial-proximity and semantic-consistency thresholds. \textit{Stage 3 (cognitive anomaly reasoning)} applies the 6-step CoT prompt over the accumulated state trajectories, key frames, and object metadata to produce the structured report, after which confidence-tiered visual verification suppresses false positives. Phys-AD videos are subsampled with dynamic FPS to reduce redundancy while preserving key state transitions. All experiments run on a single NVIDIA H200 GPU (141~GB VRAM). Full threshold hyperparameters and model-selection rationale are in the supplement (Sec.~A.2 and Sec.~A.6).
+
+
+
+
+\paragraph{\textbf{Baseline Methods.}}
+
+We compare O-VAD against three groups. (i) \textit{Traditional VADs}: the best method from each paradigm on Phys-AD---MNAD.p~\cite{park2020learning} (unsupervised, prediction-based memory normality) and S3R~\cite{wu2022self} (weakly-supervised sparse representation); both require training data and produce only binary scores without explanations. (ii) \textit{Direct Prompting}: frontier VLMs in a zero-shot ``caption-then-classify'' setup---Qwen3-VL-32B~\cite{bai2025qwen3} (extended thinking) and GPT-5~\cite{singh2025openai}---receiving raw frames and a standard anomaly-detection prompt, without object grounding or state tracking. (iii) \textit{Agentic Workflows}: two recent training-free frameworks. URF-ZS-HVAA~\cite{lin2025unified} chains temporal detection, spatial localization, and textual explanation via intra- and inter-task reasoning; VERA~\cite{ye2025vera} verbalizes learnable guiding questions for a frozen VLM, decomposing the task into yes/no perceptual queries aggregated into a video-level verdict.
+
+
+
+
+
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Video-level, type-level, and frame-level Acc/P/R/F1/AUROC (\%) on Phys-AD~\cite{li2025towards}, LiquidAD~\cite{dabouei2025deep}, and IPAD~\cite{liu2024ipad}.}
+Methods are grouped into traditional VADs (\textbf{[Trad.]}), direct-prompting VLMs (\textbf{[Direct Prompting]}), agentic workflows (\textbf{[Workflow]}), and our \textbf{[O-VAD]}. Type-level BERTScore and LLM-judge scores are reported only for methods that emit free-form anomaly-type descriptions.}
+\label{tab:main}
+\setlength{\tabcolsep}{2pt}
+\renewcommand{\arraystretch}{1.3}
+\resizebox{\columnwidth}{!}{%
+\tiny
+\begin{tabular}{lll cc cc cc c}
+\toprule
+\multicolumn{3}{l}{}
+& \multicolumn{2}{c}{\textbf{[Trad.]}}
+& \multicolumn{2}{c}{\textbf{[Direct Prompting]}}
+& \multicolumn{2}{c}{\textbf{[Workflow]}}
+& \multicolumn{1}{c}{\textbf{[O-VAD(Ours)]}} \\
+\cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(lr){10-10}
+\textbf{Dataset} & \textbf{Level} & \textbf{Metric}
+& MNAD.p$^\dagger$ & S3R$^\dagger$
+& Qwen3$^\ast$ & GPT-5$^\ast$
+& URF$^\ast$ & VERA$^\dagger$
+& \textbf{O-VAD}$^\ast$ \\
+\midrule
+
+% =================== Phys-AD ===================
+\multirow{7}{*}{\textbf{Phys-AD}} & \multirow{5}{*}{video}
+  & Acc       & \cellcolor{cellRedLight}0.635 & 0.591 & 0.454 & \cellcolor{cellRed}0.640 & 0.329 & 0.470 & 0.592 \\
+& & P         & 0.713 & \cellcolor{cellRedLight}0.739 & 0.717 & 0.690 & \cellcolor{cellRed}0.853 & 0.500 & 0.724 \\
+& & R         & \cellcolor{cellRed}0.803 & \cellcolor{cellRedLight}0.645 & 0.368 & 0.580 & 0.053 & 0.050 & 0.625 \\
+& & F1        & \cellcolor{cellRed}0.755 & \cellcolor{cellRedLight}0.689 & 0.486 & 0.630 & 0.100 & 0.091 & 0.621 \\
+& & AUC       & 0.495 & \cellcolor{cellRedLight}0.555 & 0.513 & 0.502 & 0.426 & 0.456 & \cellcolor{cellRed}\textbf{0.584} \\
+\cline{2-10}
+& \multirow{2}{*}{type}
+  & BERTscore & -- & -- & 0.798 & \cellcolor{cellYellow}{0.878} & -- & -- & \cellcolor{cellYellowLight}{0.803} \\
+& & LLM-judge & -- & -- & 0.372 & \cellcolor{cellYellowLight}{0.580} & -- & -- & \cellcolor{cellYellow}{0.595} \\
+\midrule
+
+% =================== LiquidAD ===================
+\multirow{10}{*}{\textbf{LiquidAD}} & \multirow{5}{*}{video}
+  & Acc & 0.184 & 0.631 & 0.150 & 0.462 & \cellcolor{cellRed}0.903 & 0.091 & \cellcolor{cellRedLight}0.868 \\
+& & P   & \cellcolor{cellRed}1.000 & \cellcolor{cellRedLight}0.966 & 0.886 & 0.896 & 0.912 & 0.000 & 0.910 \\
+& & R   & 0.102 & 0.616 & 0.075 & 0.462 & \cellcolor{cellRed}0.988 & 0.000 & \cellcolor{cellRedLight}0.948 \\
+& & F1  & 0.185 & 0.752 & 0.139 & 0.610 & \cellcolor{cellRed}0.949 & 0.000 & \cellcolor{cellRedLight}0.929 \\
+& & AUC & 0.453 & \cellcolor{cellRedLight}0.651 & 0.489 & 0.465 & 0.365 & 0.534 & \cellcolor{cellRed}\textbf{0.692} \\
+\cline{2-10}
+& \multirow{5}{*}{frame}
+  & Acc & 0.489 & 0.601 & \cellcolor{cellBlue}0.876 & 0.633 & 0.564 & \cellcolor{cellBlueLight}0.709 & 0.458 \\
+& & P   & 0.395 & \cellcolor{cellBlue}0.800 & 0.000 & 0.253 & \cellcolor{cellBlueLight}0.602 & 0.000 & 0.431 \\
+& & R   & 0.589 & 0.590 & 0.000 & 0.134 & \cellcolor{cellBlue}0.708 & 0.000 & \cellcolor{cellBlueLight}0.614 \\
+& & F1  & 0.472 & \cellcolor{cellBlue}0.679 & 0.000 & 0.176 & \cellcolor{cellBlueLight}0.651 & 0.000 & 0.507 \\
+& & AUC & 0.487 & \cellcolor{cellBlue}0.625 & 0.499 & 0.484 & 0.506 & 0.500 & \cellcolor{cellBlueLight}0.512 \\
+\midrule
+
+% =================== IPAD ===================
+\multirow{10}{*}{\textbf{IPAD}} & \multirow{5}{*}{video}
+  & Acc & 0.555 & 0.545 & 0.531 & \cellcolor{cellRedLight}0.607 & 0.582 & \cellcolor{cellRed}0.658 & 0.582 \\
+& & P   & \cellcolor{cellRedLight}0.643 & \cellcolor{cellRed}0.836 & 0.581 & 0.375 & 0.590 & 0.238 & 0.588 \\
+& & R   & 0.529 & 0.271 & 0.700 & 0.386 & \cellcolor{cellRedLight}0.929 & 0.089 & \cellcolor{cellRed}\textbf{0.954} \\
+& & F1  & 0.581 & 0.409 & 0.635 & 0.388 & \cellcolor{cellRed}0.721 & 0.130 & \cellcolor{cellRedLight}\textbf{0.714} \\
+& & AUC & 0.522 & \cellcolor{cellRedLight}0.539 & 0.498 & 0.519 & 0.417 & 0.519 & \cellcolor{cellRed}\textbf{0.565} \\
+\cline{2-10}
+& \multirow{5}{*}{frame}
+  & Acc & 0.716 & 0.661 & 0.703 & \cellcolor{cellBlueLight}0.815 & 0.671 & \cellcolor{cellBlue}0.852 & 0.515 \\
+& & P   & \cellcolor{cellBlue}0.410 & 0.309 & 0.114 & 0.273 & \cellcolor{cellBlueLight}0.331 & 0.000 & 0.291 \\
+& & R   & 0.006 & \cellcolor{cellBlueLight}0.166 & 0.003 & 0.119 & 0.164 & 0.000 & \cellcolor{cellBlue}\textbf{0.477} \\
+& & F1  & 0.012 & 0.216 & 0.006 & 0.165 & \cellcolor{cellBlueLight}0.220 & 0.000 & \cellcolor{cellBlue}\textbf{0.338} \\
+& & AUC & 0.430 & 0.495 & 0.497 & \cellcolor{cellBlue}0.532 & 0.512 & 0.490 & \cellcolor{cellBlueLight}0.518 \\
+\bottomrule
+\multicolumn{10}{l}{\scriptsize ``$\dagger$'' = trained; ``$\ast$'' = training-free. Colored cells = best; lighter ones = 2nd best.}\\
+\end{tabular}%
+}
+\end{table}
+
+
+
+
+
+\begin{table}[t]\centering
+\caption{\textbf{Video-level AUROC ($\uparrow$) on Phys-AD~\cite{li2025towards}
+across 22 object categories.}
+``$\dagger$''~=~methods requiring training data.
+Per category, the best / 2nd-best across all methods is
+\colorbox{cellRed}{\rule{0pt}{1.1ex}\rule{1.1ex}{0pt}} / \colorbox{cellRedLight}{\rule{0pt}{1.1ex}\rule{1.1ex}{0pt}};
+our best results are additionally in \textbf{bold}.}
+\label{tab:physad}
+\setlength{\tabcolsep}{2pt}\renewcommand{\arraystretch}{1.3}
+\resizebox{\columnwidth}{!}{%
+\tiny
+\begin{tabular}{@{}l cc cc cc c@{}}
+\toprule
+& \multicolumn{2}{c}{\textbf{Trad.}}
+& \multicolumn{2}{c}{\textbf{Direct Prompting}}
+& \multicolumn{2}{c}{\textbf{Workflow}}
+& \multicolumn{1}{c}{\textbf{O-VAD (Ours)}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-8}
+\textbf{Category}
+& MNAD.p$^\dagger$ & S3R$^\dagger$
+& Qwen3$^\ast$ & GPT-5$^\ast$
+& URF$^\ast$ & VERA$^\dagger$
+& \textbf{O-VAD}$^\ast$ \\
+\midrule
+{Ball} & \cellcolor{cellRedLight}0.589 & 0.155 & 0.528 & \cellcolor{cellRed}0.744 & 0.461 & 0.548 & 0.579 \\
+{Button} & \cellcolor{cellRedLight}0.526 & 0.108 & 0.506 & 0.456 & \cellcolor{cellRed}0.717 & 0.469 & 0.393 \\
+{Car} & \cellcolor{cellRedLight}0.599 & 0.527 & 0.492 & \cellcolor{cellRed}0.617 & 0.497 & 0.383 & 0.575 \\
+{Caster Wheel} & 0.468 & \cellcolor{cellRed}0.830 & 0.533 & 0.543 & 0.410 & \cellcolor{cellRedLight}0.609 & 0.301 \\
+{Clip} & \cellcolor{cellRed}0.628 & \cellcolor{cellRedLight}0.537 & 0.442 & 0.518 & 0.275 & 0.180 & 0.423 \\
+{Clock} & 0.513 & 0.529 & 0.581 & \cellcolor{cellRed}0.766 & 0.483 & 0.500 & \cellcolor{cellRedLight}0.669 \\
+{Fan} & 0.409 & \cellcolor{cellRedLight}0.602 & 0.566 & 0.472 & 0.523 & 0.389 & \cellcolor{cellRed}\textbf{0.669} \\
+{Gear} & 0.418 & 0.358 & \cellcolor{cellRedLight}0.644 & 0.397 & 0.451 & 0.512 & \cellcolor{cellRed}\textbf{0.879} \\
+{Hinge} & 0.497 & \cellcolor{cellRed}0.716 & \cellcolor{cellRedLight}0.589 & 0.516 & 0.544 & 0.041 & 0.526 \\
+{Liquid} & 0.453 & 0.733 & \cellcolor{cellRed}0.833 & 0.512 & 0.691 & \cellcolor{cellRedLight}0.827 & 0.776 \\
+{Lock} & 0.442 & 0.323 & 0.388 & 0.231 & 0.029 & \cellcolor{cellRedLight}0.557 & \cellcolor{cellRed}\textbf{0.780} \\
+{Magnet} & 0.512 & \cellcolor{cellRedLight}0.724 & 0.592 & 0.364 & 0.518 & \cellcolor{cellRed}0.892 & 0.576 \\
+{Roll. Bear.} & 0.437 & 0.016 & 0.418 & 0.451 & 0.304 & \cellcolor{cellRedLight}0.500 & \cellcolor{cellRed}\textbf{0.650} \\
+{Rub. Band} & 0.561 & 0.463 & \cellcolor{cellRedLight}0.767 & 0.279 & \cellcolor{cellRed}0.783 & 0.276 & 0.721 \\
+{Screw} & \cellcolor{cellRedLight}0.638 & 0.620 & 0.450 & 0.441 & 0.298 & 0.400 & \cellcolor{cellRed}\textbf{0.704} \\
+{Servo} & 0.479 & 0.452 & \cellcolor{cellRedLight}0.492 & 0.330 & 0.342 & 0.341 & \cellcolor{cellRed}\textbf{0.495} \\
+{Slide} & \cellcolor{cellRed}0.534 & \cellcolor{cellRedLight}0.533 & 0.529 & 0.528 & 0.345 & 0.225 & 0.415 \\
+{Sph. Bear.} & 0.547 & \cellcolor{cellRed}0.894 & 0.483 & 0.440 & 0.629 & 0.114 & \cellcolor{cellRedLight}0.641 \\
+{Sticky Roller} & 0.517 & \cellcolor{cellRedLight}0.778 & 0.533 & 0.523 & 0.713 & 0.474 & \cellcolor{cellRed}\textbf{0.811} \\
+{Toothpaste} & 0.257 & 0.535 & 0.578 & \cellcolor{cellRed}0.832 & 0.528 & 0.579 & \cellcolor{cellRedLight}0.689 \\
+{U Disk} & 0.513 & \cellcolor{cellRedLight}0.585 & 0.578 & 0.437 & 0.404 & 0.311 & \cellcolor{cellRed}\textbf{0.606} \\
+{Zipper} & 0.262 & \cellcolor{cellRed}0.791 & \cellcolor{cellRedLight}0.517 & 0.477 & 0.273 & 0.224 & 0.388 \\
+\midrule
+\textbf{Avg.} & 0.495 & \cellcolor{cellRedLight}0.555 & 0.513 & 0.503 & 0.426 & 0.456 & \cellcolor{cellRed}\textbf{0.584} \\
+\bottomrule
+\end{tabular}}
+\end{table}
+\subsection{Quantitative Results}
+\paragraph{\textbf{Overall comparison.}}
+
+Table~\ref{tab:main} summarizes aggregate Acc/P/R/F1/AUROC across the three benchmarks. Despite using no training data, domain knowledge, or predefined taxonomies, O-VAD attains the best average video-level AUROC among training-free methods on Phys-AD (0.584), beating the direct-prompting baselines Qwen3-VL-32B (0.513) and GPT-5 (0.503) and the agentic workflows URF-ZS-HVAA (0.426) and VERA (0.456), and even exceeding both \emph{trained} baselines MNAD.p (0.495) and S3R (0.555). It also yields the most semantically faithful descriptions, with the best type-level BERTScore (0.803) among training-free methods. The same pattern holds on LiquidAD and IPAD. This shows the bottleneck in VLM-based IVAD lies not in language reasoning but in object-level evidence construction: O-VAD's ``ground → track → reason'' pipeline avoids the false-negative collapse seen in caption-level baselines.
+
+\paragraph{\textbf{Per-dataset analysis.}}
+Table~\ref{tab:physad} reports per-category video-level AUROC on \textbf{Phys-AD} across all 22 object categories. O-VAD claims the best or second-best AUROC on 16 of 22 categories, with the largest gains on categories involving complex multi-step interactions (\eg, Gear 0.879, Lock 0.780, Screw 0.704) where temporal state tracking is most critical, and on those with subtle surface-level anomalies (\eg, Sticky Roller 0.811, U Disk 0.606) where object-centric analysis reveals details invisible to frame-level approaches. The other two benchmarks stress complementary capabilities. \textbf{LiquidAD} requires per-instance precision in a cluttered scene with up to eight simultaneous pipettes: zero-shot VLMs collapse to near-zero recall and a strong bias toward ``normal,'' whereas O-VAD tracks per-pipette state trajectories to attain the best training-free video-level AUROC (0.692) and the strongest frame-level recall and F1. \textbf{IPAD} shifts from physics-grounded reasoning to reference-based deviation across 16 industrial scenarios, where O-VAD again achieves the highest average video-level (0.565) and frame-level (0.518) AUROC and ranks first on 12 of 16 scenarios at the video level. Together these results show that object-centric state tracking generalizes across multi-instance laboratory scenes and periodic industrial processes alike. Per-category breakdowns reporting all five metrics (Acc/P/R/F1/AUROC) for every category and scenario on all three datasets are provided in the supplementary material (Sec.~B.1 and Sec.~B.2).
+
+
+
+
+
+
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=1\linewidth]{figures/2cases.pdf}
+    \caption{Qualitative results. Each row shows a different industrial manipulation task---plastic bottle rotation (top), hinge screw fastening (bottom)---with GPT-5's output (left) and O-VAD’s output (right).}
+    \label{fig:qualitative}
+\end{figure}
+
+
+\subsection{Qualitative Results}
+
+To illustrate how object-centric evidence shapes reasoning quality, we compare O-VAD against GPT-5~\cite{singh2025openai}---prompted with the same cascaded chain-of-thought but \emph{without} object grounding or state tracking---on three representative Phys-AD scenarios (Figure~\ref{fig:qualitative}). Additional reasoning traces, failure-case analyses, and human and LLM-as-judge studies are provided in the appendix (Sec.~C).
+
+
+\paragraph{\textbf{Case Analysis.}}
+Figure~\ref{fig:qualitative} visualizes full reasoning traces on representative Phys-AD examples. In Case~1 (plastic bottle rotation), a clamped bottle leaks severely at frames~60--80. GPT-5 reports ``no leakage,'' while O-VAD tracks progressive deformation (frames~0--60), detects material release at frame~60, and classifies a high-severity \textit{loss-of-containment} anomaly. In Case~2 (hinge screw fastening), three defects co-occur: repeated screw back-out (frames~30--110), head-slot stripping (frames~80--90), and screwdriver shaft bending (frames~60--100). GPT-5 concludes normal tightening; O-VAD captures all three streams and attributes them to torque-control or bit-mismatch failure. 
+Across all cases, GPT-5 defaults to ``no anomaly'' without object state evidence, whereas O-VAD produces grounded reports with localized objects, frame ranges, severity, and causal explanations.
+
+
+
+\paragraph{\textbf{Why object state trajectories matter.}}
+Several patterns emerge. First, GPT-5's failures stem not from poor language reasoning but from impoverished evidence: without object-wise state trajectories, it receives caption-level inputs and judges only whether ``the behavior matches expectations,'' confirming that the bottleneck lies in \textit{fine-grained evidence construction}. Second, O-VAD's multi-object tracking enables \textit{cross-object diagnostic reasoning} (e.g., correlating shaft bending with screw stripping in Case~2), which is unavailable to frame-level approaches. Third, open-ended state-change events provide \emph{spatiotemporally grounded evidence} anchoring every claim to specific objects and frame ranges, making reports directly actionable for root-cause diagnosis.
+
+
+
+\paragraph{\textbf{Open-ended anomaly explanation.}}
+O-VAD can detect free-form anomalies grounded in tracked object states rather than a fixed taxonomy. In Case~1, it attributes the leakage to progressive stress from repeated clamp-induced deformation, citing the spatial relationship between gripper and breach. In Case~2, it synthesizes three independent anomaly streams (direction reversals, head stripping, shaft bending) into a coherent torque-control failure hypothesis. Such structured causal reasoning goes beyond binary labels to provide the diagnostic detail operators need for corrective action.
+
+
+
+
+
+\subsection{Ablation Studies}
+
+We validate the contribution of each component in O-VAD by systematically removing one module at a time on four representative task subsets from Phys-AD (sticky roller, liquid, screw, and rubber band) that span diverse anomaly characteristics. Results are reported in Table~\ref{tab:ablation}.
+
+\paragraph{\textbf{State Tracking is indispensable.}} Removing state tracking causes catastrophic failure: precision, recall, and F1 drop to zero on three of four categories (sticky roller, liquid, screw) as the system collapses to predicting all samples normal, and recall falls to 0.033 (F1 0.065) on rubber band. Without an explicit mechanism to model state transitions across frames, the system cannot distinguish anomalous deviations from normal progressions. BERT scores stay paradoxically high (0.867–0.947) as the model emits fluent but content-agnostic ``normal'' descriptions, underscoring that text-quality metrics alone are insufficient for evaluating anomaly detection.
+
+\paragraph{\textbf{Video-level captioning provides a global semantic prior.}}  Removing video-level captioning has a category-dependent effect, revealing its role as a scene-level contextual anchor. For sticky roller and rubber band, where anomalies are holistic behavioral deviations (e.g., irregular rolling, band detachment), the caption supplies scene semantics that guide reasoning, and its removal causes AUC drops of 0.247 and 0.131. For liquid, classification metrics are unchanged and AUC decreases marginally (0.034), so state tracking alone suffices for anomalies such as overflow. On screw, removing the caption slightly improves F1 (0.700$\to$0.733): screw anomalies are localized and instantaneous (e.g., misalignment, incomplete tightening), so a coarse video-level summary introduces task-irrelevant context---motivating future multi-granularity captioning adapted to the anomaly's spatio-temporal scale.
+
+\paragraph{\textbf{Structured cognitive reasoning improves calibration.}} Replacing our cascaded six-step reasoning module (Sec.~\ref{sec:cot}) with a generic ``think step by step'' prompt still yields reasonable results, but the structured pipeline consistently improves AUC across all four categories (by 0.038--0.091) and raises BERT scores. Decomposing reasoning into process understanding, observation, expectation, comparison, causation, and classification thus yields better-calibrated confidence and more faithful explanations grounded in tracking evidence.
+
+\paragraph{\textbf{Post-verification serves as an effective safeguard.}} 
+Removing visual verification (Sec.~\ref{sec:verify}) preserves most hard classification metrics but consistently degrades AUC (up to 0.178 on sticky roller) and BERT scores, indicating it mainly benefits borderline cases rather than flipping high-confidence predictions. Through multiplicative confidence gating (Eq.~\ref{eq:conf_gate}), the verifier re-examines evidence frames against the caption to downweight spurious detections, sharpening the separation between true anomalies and ambiguous cases and improving explanation faithfulness.
+
+\begin{table*}[t]
+\centering
+\caption{\textbf{Ablation study on Phys-AD subset.}
+Per-category Acc/P/R/F1/AUC/BERT scores across ablation variants.
+The result per category with full design is \textbf{bold}; \colorbox{degraded}{orange} marks degradation from the full model.}
+\label{tab:ablation}
+\setlength{\tabcolsep}{4pt}
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{ll cccccc l cccccc}
+\toprule
+ & & \multicolumn{6}{c}{\textbf{sticky roller}} & & \multicolumn{6}{c}{\textbf{liquid}} \\
+\cmidrule(lr){3-8}\cmidrule(lr){10-15}
+\textbf{Variant} & & Acc & P & R & F1 & AUC & BERT & & Acc & P & R & F1 & AUC & BERT \\
+\midrule
+\textbf{\textit{O-VAD (full)}}
+  & & \textbf{0.689} & \textbf{0.691} & \textbf{0.967} & \textbf{0.806} & \textbf{0.811} & \textbf{0.689}
+  & & \textbf{0.667} & \textbf{0.667} & \textbf{1.000} & \textbf{0.800} & \textbf{0.776} & \textbf{0.666} \\
+(a) \textit{w/o Caption}
+  & & \cc 0.644 & \cc 0.659 & 0.967 & \cc 0.784 & \cc 0.564 & \cc 0.645
+  & & 0.667 & 0.667 & 1.000 & 0.800 & \cc 0.742 & \cc 0.650 \\
+(b) \textit{w/o State Track.}
+  & & \cc 0.311 & \cc 0.000 & \cc 0.000 & \cc 0.000 & \cc 0.484 & 0.915
+  & & \cc 0.333 & \cc 0.000 & \cc 0.000 & \cc 0.000 & \cc 0.667 & 0.867 \\
+(c) \textit{w/o CoT Reas.}
+  & & \cc 0.667 & \cc 0.667 & 1.000 & \cc 0.800 & \cc 0.720 & \cc 0.648
+  & & 0.667 & 0.667 & 1.000 & 0.800 & \cc 0.738 & \cc 0.632 \\
+(d) \textit{w/o Post-verifier}
+  & & \cc 0.667 & \cc 0.667 & 1.000 & \cc 0.800 & \cc 0.633 & \cc 0.645
+  & & 0.667 & 0.667 & 1.000 & 0.800 & \cc 0.718 & \cc 0.648 \\
+\midrule
+ & & \multicolumn{6}{c}{\textbf{screw}} & & \multicolumn{6}{c}{\textbf{rubber band}} \\
+\cmidrule(lr){3-8}\cmidrule(lr){10-15}
+\textbf{Variant} & & Acc & P & R & F1 & AUC & BERT & & Acc & P & R & F1 & AUC & BERT \\
+\midrule
+\textbf{\textit{O-VAD (full)}}
+  & & \textbf{0.600} & \textbf{0.700} & \textbf{0.700} & \textbf{0.700} & \textbf{0.704} & \textbf{0.784}
+  & & \textbf{0.633} & \textbf{0.611} & \textbf{0.733} & \textbf{0.667} & \textbf{0.721} & \textbf{0.784} \\
+(a) \textit{w/o Caption}
+  & & 0.644 & 0.733 & 0.733 & 0.733 & 0.731 & 0.788
+  & & \cc 0.500 & \cc 0.500 & \cc 0.667 & \cc 0.571 & \cc 0.590 & \cc 0.776 \\
+(b) \textit{w/o State Track.}
+  & & \cc 0.333 & \cc 0.000 & \cc 0.000 & \cc 0.000 & \cc 0.400 & 0.936
+  & & \cc 0.517 & 1.000 & \cc 0.033 & \cc 0.065 & \cc 0.587 & 0.947 \\
+(c) \textit{w/o CoT Reas.}
+  & & 0.644 & 0.733 & 0.733 & 0.733 & \cc 0.664 & \cc 0.781
+  & & \cc 0.617 & \cc 0.595 & 0.733 & \cc 0.657 & \cc 0.681 & \cc 0.766 \\
+(d) \textit{w/o Post-verifier}
+  & & 0.622 & 0.710 & 0.733 & 0.721 & \cc 0.622 & \cc 0.758
+  & & \cc 0.583 & \cc 0.571 & \cc 0.667 & \cc 0.615 & \cc 0.714 & 0.799 \\
+\bottomrule
+\end{tabular}
+}
+\end{table*}
+
+
+
+
+\section{Conclusion}
+
+
+Without labor-intensive annotations, our agentic framework delivers state-of-the-art performance on any level anomaly detection, surpassing frontier VLMs on quantitative and qualitative evaluations. This demonstrates a new paradigm for industrial video anomaly detection that bridges the gap between low-level pattern recognition and high-level cognitive reasoning, paving the way for more reliable, explainable, and generalizable industrial inspection systems.
+
+
+
+\paragraph{\textbf{Limitations.}}
+
+First, the multi-stage agentic pipeline incurs substantially higher latency than single-forward-pass VAD models, scaling with the number of tracked objects per video.
+Second, O-VAD relies on the VLM's internalized commonsense rather than domain-specific expert priors, so its performance declines on anomalies defined by invisible physical properties or precise specifications 
+% (\eg, required rotation angles, magnetic strength, exact press force thresholds) 
+that cannot be inferred from visual appearance alone---few-shot in-context learning with specification examples is a promising direction to bridge this gap.
+Third, static or perception-ambiguous defects (\eg, stuck buttons, degaussed magnets) that produce visually plausible behavior remain a fundamental boundary of perception-driven reasoning, motivating future integration of lightweight domain priors and process specification references.
+
+
+
+\section*{Acknowledgements}
+
+This work was supported in part by U.S. NSF grants DBI-2238093, DBI-2422619, IIS-2211597, and MCB-2205148. Yizhou Zhao was supported in part by the SoftBank Group–ARM Fellowship. 
+
+
+
+\bibliographystyle{splncs04}
+\bibliography{main}
+
+
+
+
+\end{document}
