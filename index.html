@@ -73,7 +73,7 @@
 
   <!-- ===== TEASER ===== -->
   <figure style="margin: 28px 0 8px;">
-    <img src="static/images/teaser.png" alt="O-VAD teaser" style="width: 100%; height: auto; display: block; border: 1px solid rgba(22,32,46,0.10); border-radius: 6px;">
+    <img src="figures/intro.png" alt="O-VAD teaser" style="width: 100%; height: auto; display: block; border: 1px solid rgba(22,32,46,0.10); border-radius: 6px;">
     <figcaption style="margin-top: 14px; color: var(--muted); font-size: 15px; line-height: 1.55;">
       <b style="color: var(--ink);">Why object state evolution matters.</b> A toothpaste tube undergoes pressing and deformation before a subtle leakage emerges. Traditional methods give a binary score; VLM prompting misses it for lack of localized evidence. <span style="color: var(--accent, #2a6fdb); font-weight: 600;">O-VAD</span> tracks object-wise state changes and produces an open-ended anomaly report with in-depth analysis.
     </figcaption>
@@ -114,7 +114,7 @@
       A training-free <b style="color: var(--ink);">&ldquo;ground &rarr; track &rarr; reason&rdquo;</b> agentic pipeline that shifts the unit of analysis from holistic frames to individual objects.
     </p>
     <figure style="margin: 0 0 36px;">
-      <img src="static/images/pipeline.png" alt="O-VAD pipeline" style="width: 100%; height: auto; display: block; border: 1px solid rgba(22,32,46,0.10); border-radius: 6px;">
+      <img src="figures/framework.png" alt="O-VAD pipeline" style="width: 100%; height: auto; display: block; border: 1px solid rgba(22,32,46,0.10); border-radius: 6px;">
       <figcaption style="margin-top: 14px; color: var(--muted); font-size: 15px; line-height: 1.55;">
         <b style="color: var(--ink);">Overview of O-VAD.</b> Stage&nbsp;1 samples multiple frames and queries a VLM (GPT-5) to discover all objects, then segments them with SAM&nbsp;3 to produce initial masks and metadata. Stage&nbsp;2 builds spatiotemporal tubelets via CropFormer + SAM&nbsp;2, recovers missing tracks through semantic and proximity priors, and queries the VLM for open-ended state-change and inter-object interaction analysis. Stage&nbsp;3 feeds accumulated metadata and state-change events into a cascaded chain-of-thought that separates process actions from failure outcomes, followed by visual verification.
       </figcaption>
@@ -143,11 +143,11 @@
   <section id="video" style="padding: 56px 0 8px; scroll-margin-top: 24px;">
     <h2 style="font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent, #2a6fdb); text-align: center; margin: 0 0 24px;">Demo</h2>
     <div style="border: 1px solid rgba(22,32,46,0.10); border-radius: 10px; overflow: hidden; background: #0c1018;">
-      <video controls preload="none" poster="static/images/teaser.png" style="width: 100%; display: block;">
+      <video controls preload="metadata" poster="figures/intro.png" style="width: 100%; display: block;">
         <source src="static/videos/demo.mp4" type="video/mp4">
       </video>
     </div>
-    <p style="text-align: center; margin: 14px auto 0; color: var(--muted); font-size: 14.5px; max-width: 700px;">Replace <code style="font-family: 'JetBrains Mono', monospace; font-size: 13px; background: #f1f3f6; padding: 1px 6px; border-radius: 4px;">static/videos/demo.mp4</code> with your reasoning-trace walkthrough.</p>
+    <p style="text-align: center; margin: 14px auto 0; color: var(--muted); font-size: 14.5px; max-width: 700px;">Object-centric tracking of eight pipettes through a full liquid-transfer cycle.</p>
   </section>
 
   <!-- ===== DATASETS ===== -->
@@ -192,19 +192,19 @@
       <div style="font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--accent, #2a6fdb); font-weight: 500; margin-bottom: 12px;">LIQUIDAD &middot; PER-INSTANCE STATE TRACKING</div>
       <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
         <figure style="margin: 0;">
-          <img src="static/images/liquidad_masks.png" alt="Instance masks" style="width: 100%; height: 118px; object-fit: cover; display: block; border-radius: 6px; background: #000;">
+          <img src="figures/liquidad_masks.png" alt="Instance masks" style="width: 100%; height: 118px; object-fit: cover; display: block; border-radius: 6px; background: #000;">
           <figcaption style="margin-top: 7px; font-size: 12px; color: var(--muted);">Instance masks</figcaption>
         </figure>
         <figure style="margin: 0;">
-          <img src="static/images/liquidad_f1.jpg" alt="Tracked pipettes t1" style="width: 100%; height: 118px; object-fit: cover; display: block; border-radius: 6px;">
+          <img src="figures/liquidad_f1.jpg" alt="Tracked pipettes t1" style="width: 100%; height: 118px; object-fit: cover; display: block; border-radius: 6px;">
           <figcaption style="margin-top: 7px; font-size: 12px; color: var(--muted);">Descend &middot; 8 pipettes</figcaption>
         </figure>
         <figure style="margin: 0;">
-          <img src="static/images/liquidad_f2.jpg" alt="Tracked pipettes t2" style="width: 100%; height: 118px; object-fit: cover; display: block; border-radius: 6px;">
+          <img src="figures/liquidad_f2.jpg" alt="Tracked pipettes t2" style="width: 100%; height: 118px; object-fit: cover; display: block; border-radius: 6px;">
           <figcaption style="margin-top: 7px; font-size: 12px; color: var(--muted);">Aspirate &middot; contours held</figcaption>
         </figure>
         <figure style="margin: 0;">
-          <img src="static/images/liquidad_f3.jpg" alt="Dispense t3" style="width: 100%; height: 118px; object-fit: cover; display: block; border-radius: 6px;">
+          <img src="figures/liquidad_f3.jpg" alt="Dispense t3" style="width: 100%; height: 118px; object-fit: cover; display: block; border-radius: 6px;">
           <figcaption style="margin-top: 7px; font-size: 12px; color: var(--muted);">Dispense &middot; liquid transfer</figcaption>
         </figure>
       </div>
