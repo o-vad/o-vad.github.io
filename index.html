@@ -316,13 +316,13 @@ a:hover{text-decoration:underline}
 <h2 style="font-family:var(--font-head);font-weight:600;font-size:33px;line-height:1.15;letter-spacing:-.015em;margin:0 0 22px;color:var(--ink)">BibTeX</h2>
 <div style="position:relative;background:#16181d;border-radius:14px;padding:24px 26px;overflow:auto">
 <button ref="{{ bibRef }}" onClick="{{ copyBib }}" style="position:absolute;top:14px;right:14px;font-family:var(--font-mono);font-size:12px;padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#cbd3e1;cursor:pointer;transition:background .15s ease" style-hover="background:rgba(255,255,255,.14)">Copy</button>
-<pre style="margin:0;font-family:var(--font-mono);font-size:13px;line-height:1.7;color:#cbd3e1;white-space:pre;overflow:auto">@inproceedings{yuan2026ovad,
-  title     = {O-VAD: Industrial Video Anomaly Detection
-               through Object-Centric Tracking and Reasoning},
-  author    = {Yuan, Mei and Long, Qi and Wu, Qifeng and Li, Zhenyang and
-               Zhao, Yizhou and Wang, Lei and Liu, Yang and Xu, Min},
-  booktitle = {Proceedings of the European Conference on Computer Vision (ECCV)},
-  year      = {2026}
+<pre style="margin:0;font-family:var(--font-mono);font-size:13px;line-height:1.7;color:#cbd3e1;white-space:pre;overflow:auto">@article{yuan2026vad,
+  title={O-VAD: Industrial Video Anomaly Detection through
+         Object-Centric Tracking and Reasoning},
+  author={Yuan, Mei and Long, Qi and Wu, Qifeng and Li, Zhenyang and
+          Zhao, Yizhou and Wang, Lei and Liu, Yang and Xu, Min},
+  journal={arXiv preprint arXiv:2607.18142},
+  year={2026}
 }</pre>
 </div>
 </div>
@@ -348,7 +348,7 @@ class Component extends DCLogic {
     super(props);
     this.rootRef = React.createRef();
     this.bibRef = React.createRef();
-    this.BIB = '@inproceedings{yuan2026ovad,\n  title     = {O-VAD: Industrial Video Anomaly Detection through Object-Centric Tracking and Reasoning},\n  author    = {Yuan, Mei and Long, Qi and Wu, Qifeng and Li, Zhenyang and Zhao, Yizhou and Wang, Lei and Liu, Yang and Xu, Min},\n  booktitle = {Proceedings of the European Conference on Computer Vision (ECCV)},\n  year      = {2026}\n}';
+    this.BIB = '@article{yuan2026vad,\n  title={O-VAD: Industrial Video Anomaly Detection through Object-Centric Tracking and Reasoning},\n  author={Yuan, Mei and Long, Qi and Wu, Qifeng and Li, Zhenyang and Zhao, Yizhou and Wang, Lei and Liu, Yang and Xu, Min},\n  journal={arXiv preprint arXiv:2607.18142},\n  year={2026}\n}';
   }
   componentDidMount(){ this.applyTheme(); this.setupVideos(); }
   setupVideos(){
